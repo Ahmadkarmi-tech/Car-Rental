@@ -1,0 +1,983 @@
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+}
+
+.login-card {
+    width: 350px;
+    padding: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.login-card h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+.login-card h6 {
+    text-align: center;
+    margin-bottom: 0;
+    color: #333;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: -10px;
+}
+
+.remember-me input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.remember-me label {
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#login-btn {
+    padding: 11px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#login-btn:hover {
+    background-color: #0056b3;
+}
+
+.Car-Rental {
+    min-height: 100vh;
+    background-color: whitesmoke;
+}
+
+.container {
+    display: grid;
+    grid-template-areas:
+        "header header"
+        "menu content";
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: 70px 1fr;
+    min-height: 100vh;
+}
+
+.header {
+    grid-area: header;
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    padding: 0 25px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.cont {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.logo {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    margin-right: 10px;
+}
+
+.cont h2 {
+    margin: 0;
+    color: #333;
+    font-size: 22px;
+}
+
+.user-email {
+    margin-left: auto;
+    margin-right: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.add-car {
+    padding: 9px 16px;
+    border: none;
+    border-radius: 7px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.add-car:hover {
+    background-color: #45a049;
+}
+
+.menu {
+    grid-area: menu;
+    background-color: white;
+    border-right: 1px solid #ddd;
+    padding-top: 20px;
+
+    position: sticky;
+    top: 70px;
+
+    height: calc(100vh - 70px);
+
+    align-self: start;
+}
+
+.menu ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.menu li {
+    margin: 10px 12px;
+    padding: 0;
+}
+
+.button {
+    display: block;
+    padding: 12px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #333;
+    font-size: 17px;
+}
+
+.button:hover {
+    background-color: #f0f0f0;
+    color: #007bff;
+}
+
+.contents {
+    grid-area: content;
+    background-color: white;
+    margin: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    min-height: calc(100vh - 110px);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px;
+    margin: 0;
+    list-style: none;
+}
+
+.card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    text-align: left;
+    overflow: hidden;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.card:hover {
+    cursor: pointer;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 9px;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.card h3 {
+    margin: 0 0 8px;
+    color: #333;
+    font-size: 19px;
+}
+
+.card p {
+    margin: 6px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.card p:last-of-type {
+    color: #222;
+    font-size: 17px;
+    font-weight: bold;
+    margin-top: 12px;
+}
+
+.status {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.card.available .status {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.card.rented .status {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.card.rented {
+    opacity: 0.8;
+}
+
+.button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.button.active:hover {
+    background-color: #0056b3;
+    color: white;
+}
+.car-dialog {
+    width: 500px;
+    max-width: 90%;
+    border: none;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.car-dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.car-dialog > img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.car-dialog h2 {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.car-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 20px;
+    margin: 20px 0;
+}
+
+.car-details p {
+    color: #555;
+}
+
+.close-dialog {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+
+    border: none;
+    background: white;
+
+    font-size: 28px;
+    color: #555;
+
+    cursor: pointer;
+}
+
+.rent-button {
+    width: 100%;
+    padding: 12px;
+
+    border: none;
+    border-radius: 7px;
+
+    background-color: #007bff;
+    color: white;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.rent-button:hover {
+    background-color: #0056b3;
+}
+
+.rent-button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+.edit-button {
+    width: 100%;
+    padding: 12px;
+
+    border: none;
+    border-radius: 7px;
+
+    background-color: #28a745;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.edit-button:hover {
+    background-color: #218838;
+}
+
+.remove-button {
+    width: 100%;
+    padding: 12px;
+
+    border: none;
+    border-radius: 7px;
+
+    background-color: #dc3545;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.remove-button:hover {
+    background-color: #c82333;
+}
+
+.rent-dialog {
+    width: 500px;
+    max-width: 90%;
+    border: none;
+    border-radius: 12px;
+    padding: 30px;
+    background-color: white;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.rent-dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.rent-dialog h1 {
+    text-align: center;
+    margin: 0 0 30px;
+    color: #333;
+}
+
+.rent-dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rent-dialog .form-content {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin: 0;
+}
+
+.rent-dialog .form-content label {
+    flex: 1;
+    color: #333;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.rent-dialog .form-content input {
+    flex: 1;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.rent-dialog .form-content input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.2);
+}
+
+.rent-dialog .form-content input:hover {
+  border-color:  #007bff;
+}
+
+.rent-dialog .form-content #TotalCount:hover {
+  border: 1px solid #ccc;
+  cursor: default;
+}
+
+.rent-dialog .form-content #TotalCount:focus{
+  border: 1px solid #ccc;
+  cursor: default;
+  box-shadow:none;
+}
+
+.rent-dialog .RentButton {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    border: none;
+    border-radius: 7px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.rent-dialog .RentButton:hover {
+    background-color: #45a049;
+}
+
+.rent-dialog .close-dialog {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+
+    border: none;
+    background: none;
+
+    font-size: 28px;
+    color: #555;
+
+    cursor: pointer;
+}
+
+.rent-dialog .close-dialog:hover {
+    color: #000;
+}
+
+#total-count {
+    cursor: default;
+}
+
+#total-count:focus {
+    outline: none;
+    border-color: #ccc;
+    box-shadow: none;
+}
+#total-count:hover {
+    outline: none;
+    border-color: #ccc;
+    box-shadow: none;
+}
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.history-table caption {
+    text-align: left;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.history-table th {
+    background-color: #007bff;
+    color: white;
+    padding: 14px;
+    text-align: left;
+    font-size: 15px;
+}
+
+.history-table td {
+    padding: 14px;
+    border-bottom: 1px solid #eee;
+    color: #555;
+    font-size: 14px;
+}
+
+.history-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table td:last-child {
+    font-weight: bold;
+    color: #333;
+}
+
+.setting-btn {
+    padding: 8px;
+    border: none;
+    outline: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.setting-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.setting-icon {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    margin: 0;
+}
+
+.SettingDialog {
+    width: 650px;
+    max-width: 90%;
+    padding: 0;
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+}
+
+.SettingDialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+
+.setting-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px;
+    padding: 0 25px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.setting-header h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 22px;
+}
+
+.setting-container {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    min-height: 300px;
+}
+
+.setting-menu {
+    padding: 15px 10px;
+    background-color: #f8fafc;
+    border-right: 1px solid #e5e7eb;
+}
+
+.Account-btn {
+    width: 100%;
+    padding: 11px 14px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: #007bff;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+}
+
+.Account-btn:hover {
+    background-color: #0056b3;
+}
+
+.setting-content {
+    padding: 25px;
+    background-color: white;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.6;
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 15px;
+}
+
+.SettingDialog .close-dialog {
+    position: absolute;
+    top: 17px;
+    right: 18px;
+
+    width: 35px;
+    height: 35px;
+
+    border: none;
+    border-radius: 50%;
+
+    background-color: transparent;
+    color: #6b7280;
+
+    font-size: 25px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.SettingDialog .close-dialog:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.setting-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.setting-labels label {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.setting-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.setting-inputs input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background-color: #f9fafb;
+    color: #374151;
+    font-size: 14px;
+}
+
+.setting-inputs input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.setting-inputs input:read-only {
+    cursor: default;
+}
+.setting-content .singout-btn {
+    display: block;
+    margin-left: auto;
+    margin-top: 25px;
+    width: 110px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background-color: #dc2626;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.setting-content .singout-btn:hover {
+    background-color: #b91c1c;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+}
+.addCarDialog {
+    width: 650px;
+    max-width: 92%;
+    padding: 0;
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.addCarDialog::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.addCarContainer {
+    width: 100%;
+    padding: 28px 32px 32px;
+    box-sizing: border-box;
+}
+
+.addCarContainer h2 {
+    margin: 0 0 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #1f2937;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.addCarDialog .close-dialog {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #6b7280;
+    font-size: 26px;
+    line-height: 36px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 10;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.addCarDialog .close-dialog:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.addCarDialog form {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.add-car-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 25px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.car-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.car-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.car-field label {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.car-field input {
+    width: 100%;
+    height: 38px;
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #111827;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.car-field input:hover {
+    border-color: #9ca3af;
+}
+
+.car-field input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+.car-field input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.car-field input[type="number"]::-webkit-inner-spin-button,
+.car-field input[type="number"]::-webkit-outer-spin-button {
+    margin: 0;
+}
+
+.add-car-submit {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 44px;
+    margin-top: 4px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        background-color 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+}
+
+.add-car-submit:hover {
+    background-color: #0069d9;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
+}
+
+.add-car-submit:active {
+    transform: translateY(1px);
+}
+.image-drop-zone {
+    width: 100%;
+    height: 38px;
+    padding: 7px 10px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+
+    gap: 8px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    background-color: #ffffff;
+    color: #6b7280;
+
+    font-size: 14px;
+    font-weight: 400;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.image-drop-zone span {
+    font-size: 16px;
+}
+
+.image-drop-zone strong {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.image-drop-zone small {
+    display: none;
+}
+
+.image-drop-zone:hover {
+    border-color: #9ca3af;
+}
+
+.image-drop-zone:focus-within {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
