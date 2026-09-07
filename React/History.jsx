@@ -1,7 +1,35 @@
 import Header from "./Header";
 
-function History({userEmail,isAdmin,history,setUserEmail,cars,setCars}) {
-    const selectedHistory = isAdmin ? history : history.filter((hist) => hist.Email === userEmail);
+function History({
+    user,
+    userData,
+    isAdmin,
+    history,
+    cars,
+    setCars
+}) {
+    const selectedHistory =
+        isAdmin
+            ? history
+            : history.filter(
+                (hist) =>
+                    hist.uid === user?.uid ||
+                    hist.Email === user?.email
+            );
+
+    function getCarName(carID) {
+        const car = cars.find(
+            (item) =>
+                Number(item.id) ===
+                Number(carID)
+        );
+
+        if (!car) {
+            return `Car ${carID}`;
+        }
+
+        return `${car.brand} ${car.model}`;
+    }
 
     return (
         <div className="Car-Rental">
@@ -9,11 +37,9 @@ function History({userEmail,isAdmin,history,setUserEmail,cars,setCars}) {
             <div className="container">
 
                 <Header
-                    userEmail={userEmail}
+                    user={user}
+                    userData={userData}
                     isAdmin={isAdmin}
-                    setUserEmail={
-                        setUserEmail
-                    }
                     cars={cars}
                     setCars={setCars}
                 />
@@ -56,36 +82,59 @@ function History({userEmail,isAdmin,history,setUserEmail,cars,setCars}) {
 
                         <tbody>
 
-                            {selectedHistory.length > 0 ? (
+                            {selectedHistory.length >
+                            0 ? (
 
-                                selectedHistory.map( (hist) => (
-
+                                selectedHistory.map(
+                                    (hist) => (
                                         <tr
-                                            key={hist.id}
+                                            key={
+                                                hist.firebaseId ||
+                                                hist.id
+                                            }
                                         >
 
                                             <td>
-                                                {hist.id}
+                                                {
+                                                    hist.id
+                                                }
                                             </td>
 
                                             <td>
-                                                {hist.carID}
+                                                {getCarName(
+                                                    hist.carID
+                                                )}{" "}
+                                                (
+                                                {
+                                                    hist.carID
+                                                }
+                                                )
                                             </td>
 
                                             <td>
-                                                {hist.FromDate}
+                                                {
+                                                    hist.FromDate
+                                                }
                                             </td>
 
                                             <td>
-                                                {hist.ToDate}
+                                                {
+                                                    hist.ToDate
+                                                }
                                             </td>
 
                                             <td>
-                                                ${hist.Total}
+                                                $
+                                                {
+                                                    Number(
+                                                        hist.Total
+                                                    ).toFixed(
+                                                        2
+                                                    )
+                                                }
                                             </td>
 
                                         </tr>
-
                                     )
                                 )
 

@@ -1,7 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import {
+    signInWithEmailAndPassword,
+    setPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence
+} from "firebase/auth";
+import { auth } from "./firebase";
 
-function LoginPage({ setUserEmail }) {
+function LoginPage() {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -13,7 +20,7 @@ function LoginPage({ setUserEmail }) {
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        const {name,value,type,checked} = e.target;
+        const { name, value, type, checked } = e.target;
 
         setFormData((prev) => ({
             ...prev,
@@ -21,7 +28,7 @@ function LoginPage({ setUserEmail }) {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!formData.email || !formData.password) {
@@ -31,37 +38,35 @@ function LoginPage({ setUserEmail }) {
 
         setLoading(true);
 
-        const savedUsers =JSON.parse(localStorage.getItem("users")) || [];
+        try {
+            const persistence = formData.rememberMe
+                ? browserLocalPersistence
+                : browserSessionPersistence;
 
-        const user = savedUsers.find((item) => item.email === formData.email && item.password === formData.password);
+            await setPersistence(auth, persistence);
 
-        if (!user) {
-            alert("Wrong email or password!");
+            await signInWithEmailAndPassword(
+                auth,
+                formData.email,
+                formData.password
+            );
+
+            navigate("/");
+        } catch (error) {
+            console.error(error);
+
+            if (
+                error.code === "auth/invalid-credential" ||
+                error.code === "auth/user-not-found" ||
+                error.code === "auth/wrong-password"
+            ) {
+                alert("Wrong email or password!");
+            } else {
+                alert("Failed to login.");
+            }
+        } finally {
             setLoading(false);
-            return;
         }
-
-        if (formData.rememberMe) {
-            localStorage.setItem("userEmail",user.email);
-
-            sessionStorage.removeItem("userEmail");
-        } else {
-            sessionStorage.setItem("userEmail",user.email);
-
-            localStorage.removeItem("userEmail");
-        }
-
-        setUserEmail(user.email);
-
-        setFormData({
-            email: "",
-            password: "",
-            rememberMe: false
-        });
-
-        setLoading(false);
-
-        navigate("/");
     };
 
     return (
@@ -76,7 +81,6 @@ function LoginPage({ setUserEmail }) {
                 >
 
                     <div className="form-group">
-
                         <label htmlFor="email">
                             Email:
                         </label>
@@ -89,11 +93,9 @@ function LoginPage({ setUserEmail }) {
                             value={formData.email}
                             onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="password">
                             Password:
                         </label>
@@ -106,11 +108,9 @@ function LoginPage({ setUserEmail }) {
                             value={formData.password}
                             onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="RememberMe">
-
                         <label htmlFor="rememberMe">
                             Remember me:
                         </label>
@@ -119,12 +119,9 @@ function LoginPage({ setUserEmail }) {
                             type="checkbox"
                             name="rememberMe"
                             id="rememberMe"
-                            checked={
-                                formData.rememberMe
-                            }
+                            checked={formData.rememberMe}
                             onChange={handleChange}
                         />
-
                     </div>
 
                     <button

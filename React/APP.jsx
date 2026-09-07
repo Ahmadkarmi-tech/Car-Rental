@@ -11,62 +11,143 @@ import {
 
 import { useEffect, useState } from "react";
 
+import { onAuthStateChanged } from "firebase/auth";
+import {
+    collection,
+    onSnapshot
+} from "firebase/firestore";
+
+import { auth, db } from "./firebase";
+
 function App() {
-    const [userEmail, setUserEmail] = useState("");
+    const [user, setUser] = useState(null);
+    const [userData, setUserData] = useState(null);
+
     const [cars, setCars] = useState([]);
     const [history, setHistoryData] = useState([]);
-    const savedEmail = localStorage.getItem("userEmail") || sessionStorage.getItem("userEmail");
+
+    const [authLoading, setAuthLoading] = useState(true);
+    const [carsLoading, setCarsLoading] = useState(true);
 
     useEffect(() => {
-
-        if (savedEmail) {
-            setUserEmail(savedEmail);
-        }
-
-        const savedCars =
-            localStorage.getItem("Cars");
-
-        const savedHistory =
-            localStorage.getItem("History");
-
-        if (savedCars) {
-            try {
-                setCars(JSON.parse(savedCars));
-            } catch (error) {
-                console.error(
-                    "Error loading Cars:",
-                    error
-                );
-
-                localStorage.removeItem("Cars");
+        const unsubscribe = onAuthStateChanged(
+            auth,
+            (currentUser) => {
+                setUser(currentUser);
+                setAuthLoading(false);
             }
-        }
+        );
 
-        if (savedHistory) {
-            try {
-                setHistoryData(
-                    JSON.parse(savedHistory)
-                );
-            } catch (error) {
-                console.error(
-                    "Error loading History:",
-                    error
-                );
-
-                localStorage.removeItem("History");
-            }
-        }
+        return unsubscribe;
     }, []);
 
     useEffect(() => {
-        localStorage.setItem("Cars",JSON.stringify(cars));
-    }, [cars]);
+        if (!user) {
+            setUserData(null);
+            return;
+        }
+
+        const unsubscribe = onSnapshot(
+            collection(db, "users"),
+            (snapshot) => {
+                const users = snapshot.docs.map(
+                    (doc) => ({
+                        id: doc.id,
+                        ...doc.data()
+                    })
+                );
+
+                const currentUser = users.find(
+                    (item) =>
+                        item.uid === user.uid
+                );
+
+                setUserData(
+                    currentUser || null
+                );
+            },
+            (error) => {
+                console.error(
+                    "Error loading users:",
+                    error
+                );
+            }
+        );
+
+        return unsubscribe;
+    }, [user]);
 
     useEffect(() => {
-        localStorage.setItem("History",JSON.stringify(history));
-    }, [history]);
+        if (!user) {
+            setCars([]);
+            setCarsLoading(false);
+            return;
+        }
 
-    const isAdmin = userEmail === "Admin@gmail.com";
+        setCarsLoading(true);
+
+        const unsubscribe = onSnapshot(
+            collection(db, "cars"),
+            (snapshot) => {
+                const carData =
+                    snapshot.docs.map(
+                        (doc) => ({
+                            ...doc.data(),
+                            firebaseId: doc.id
+                        })
+                    );
+
+                setCars(carData);
+                setCarsLoading(false);
+            },
+            (error) => {
+                console.error(
+                    "Error loading cars:",
+                    error
+                );
+
+                setCarsLoading(false);
+            }
+        );
+
+        return unsubscribe;
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) {
+            setHistoryData([]);
+            return;
+        }
+
+        const unsubscribe = onSnapshot(
+            collection(db, "history"),
+            (snapshot) => {
+                const historyData =
+                    snapshot.docs.map(
+                        (doc) => ({
+                            ...doc.data(),
+                            firebaseId: doc.id
+                        })
+                    );
+
+                setHistoryData(
+                    historyData
+                );
+            },
+            (error) => {
+                console.error(
+                    "Error loading history:",
+                    error
+                );
+            }
+        );
+
+        return unsubscribe;
+    }, [user]);
+
+    const isAdmin =
+        user?.email?.toLowerCase() ===
+        "admin@gmail.com";
 
     const router =
         createBrowserRouter([
@@ -75,20 +156,19 @@ function App() {
 
                 element: (
                     <ProtectedRoute
-                        userEmail={savedEmail}
+                        user={user}
+                        loading={authLoading}
                     >
                         <HomePage
-                            userEmail={userEmail}
+                            user={user}
+                            userData={userData}
                             isAdmin={isAdmin}
                             history={history}
-                            setHistoryData={
-                                setHistoryData
-                            }
-                            setUserEmail={
-                                setUserEmail
-                            }
                             cars={cars}
                             setCars={setCars}
+                            carsLoading={
+                                carsLoading
+                            }
                         />
                     </ProtectedRoute>
                 )
@@ -99,15 +179,14 @@ function App() {
 
                 element: (
                     <ProtectedRoute
-                        userEmail={savedEmail}
+                        user={user}
+                        loading={authLoading}
                     >
                         <History
-                            userEmail={userEmail}
+                            user={user}
+                            userData={userData}
                             isAdmin={isAdmin}
                             history={history}
-                            setUserEmail={
-                                setUserEmail
-                            }
                             cars={cars}
                             setCars={setCars}
                         />
@@ -119,11 +198,7 @@ function App() {
                 path: "/Login",
 
                 element: (
-                    <LoginPage
-                        setUserEmail={
-                            setUserEmail
-                        }
-                    />
+                    <LoginPage />
                 )
             },
 

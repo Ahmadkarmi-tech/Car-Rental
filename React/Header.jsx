@@ -1,34 +1,40 @@
-import {NavLink,useNavigate} from "react-router-dom";
-
-import {useEffect,useRef,useState} from "react";
-
+import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { signOut } from "firebase/auth";
 import AddCarDialog from "./AddCarDialog";
+import { auth } from "./firebase";
 
-function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
+function Header({
+    user,
+    userData,
+    isAdmin,
+    cars,
+    setCars
+}) {
     const navigate = useNavigate();
 
     const settingRef = useRef(null);
 
-    const [isSettingOpen,setIsSettingOpen] = useState(false);
+    const [isSettingOpen, setIsSettingOpen] =
+        useState(false);
 
-    const [isAddCarOpen,setIsAddCarOpen] = useState(false);
-
-    const [currentUser,setCurrentUser] = useState(null);
-
-    useEffect(() => {
-        const savedUsers = JSON.parse( localStorage.getItem("users")) || [];
-
-        const user = savedUsers.find((item) => item.email === userEmail);
-
-        setCurrentUser(user || null);
-    }, [userEmail]);
+    const [isAddCarOpen, setIsAddCarOpen] =
+        useState(false);
 
     useEffect(() => {
-        if (settingRef.current && isSettingOpen && !settingRef.current.open) {
+        if (
+            settingRef.current &&
+            isSettingOpen &&
+            !settingRef.current.open
+        ) {
             settingRef.current.showModal();
         }
 
-        if (settingRef.current && !isSettingOpen && settingRef.current.open) {
+        if (
+            settingRef.current &&
+            !isSettingOpen &&
+            settingRef.current.open
+        ) {
             settingRef.current.close();
         }
     }, [isSettingOpen]);
@@ -41,14 +47,19 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
         setIsSettingOpen(false);
     }
 
-    function handleSignout() {
-        localStorage.removeItem("userEmail");
-        sessionStorage.removeItem("userEmail");
+    async function handleSignout() {
+        try {
+            await signOut(auth);
+            setIsSettingOpen(false);
+            navigate("/Login");
+        } catch (error) {
+            console.error(
+                "Error signing out:",
+                error
+            );
 
-        setUserEmail("");
-        setIsSettingOpen(false);
-
-        navigate("/Login");
+            alert("Failed to sign out.");
+        }
     }
 
     function handleAddCarDialog() {
@@ -62,6 +73,7 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
     return (
         <>
             <div className="header">
+
                 <div className="cont">
 
                     <img
@@ -75,14 +87,16 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                     </h2>
 
                     <span className="user-email">
-                        {userEmail}
+                        {user?.email}
                     </span>
 
                     {isAdmin && (
                         <button
                             type="button"
                             className="add-car"
-                            onClick={handleAddCarDialog}
+                            onClick={
+                                handleAddCarDialog
+                            }
                         >
                             + Add New Car
                         </button>
@@ -104,6 +118,7 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
             </div>
 
             <nav className="menu">
+
                 <ul>
 
                     <li>
@@ -133,6 +148,7 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                     </li>
 
                 </ul>
+
             </nav>
 
             <dialog
@@ -140,6 +156,7 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                 className="SettingDialog"
                 onCancel={closeDialog}
             >
+
                 <button
                     type="button"
                     className="close-dialog"
@@ -149,9 +166,11 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                 </button>
 
                 <div className="setting-header">
+
                     <h2>
                         Settings
                     </h2>
+
                 </div>
 
                 <div className="setting-container">
@@ -202,7 +221,8 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <input
                                 type="text"
                                 value={
-                                    currentUser?.firstName || ""
+                                    userData?.firstName ||
+                                    ""
                                 }
                                 readOnly
                             />
@@ -210,7 +230,8 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <input
                                 type="text"
                                 value={
-                                    currentUser?.lastName || ""
+                                    userData?.lastName ||
+                                    ""
                                 }
                                 readOnly
                             />
@@ -218,8 +239,9 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <input
                                 type="text"
                                 value={
-                                    currentUser?.email ||
-                                    userEmail
+                                    userData?.email ||
+                                    user?.email ||
+                                    ""
                                 }
                                 readOnly
                             />
@@ -227,7 +249,8 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <input
                                 type="text"
                                 value={
-                                    currentUser?.licenseNumber || ""
+                                    userData?.licenseNumber ||
+                                    ""
                                 }
                                 readOnly
                             />
@@ -235,7 +258,8 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <input
                                 type="text"
                                 value={
-                                    currentUser?.phoneNumber || ""
+                                    userData?.phoneNumber ||
+                                    ""
                                 }
                                 readOnly
                             />
@@ -243,7 +267,8 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <input
                                 type="date"
                                 value={
-                                    currentUser?.dateOfBirth || ""
+                                    userData?.dateOfBirth ||
+                                    ""
                                 }
                                 readOnly
                             />
@@ -251,7 +276,9 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                             <button
                                 type="button"
                                 className="singout-btn"
-                                onClick={handleSignout}
+                                onClick={
+                                    handleSignout
+                                }
                             >
                                 Signout
                             </button>
@@ -261,12 +288,15 @@ function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
                     </div>
 
                 </div>
+
             </dialog>
 
             {isAdmin && (
                 <AddCarDialog
                     isOpen={isAddCarOpen}
-                    onClose={handleAddCarDialogClose}
+                    onClose={
+                        handleAddCarDialogClose
+                    }
                     cars={cars}
                     setCars={setCars}
                     isAdd={true}

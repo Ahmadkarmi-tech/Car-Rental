@@ -981,3 +981,39 @@ body {
     border-color: #007bff;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
 }
+.cars-loading {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.cars-loading h2 {
+    margin: 15px 0 5px;
+}
+
+.cars-loading p {
+    margin: 0;
+    color: #777;
+}
+
+.loader {
+    width: 45px;
+    height: 45px;
+    border: 5px solid #ddd;
+    border-top: 5px solid #333;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

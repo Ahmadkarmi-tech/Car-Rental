@@ -2,25 +2,30 @@ import { useRef, useState } from "react";
 import Header from "./Header";
 import AddCarDialog from "./AddCarDialog";
 
-function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,setCars}) {
-    const [selectedCar,setSelectedCar] = useState(null);
+import {collection,doc,runTransaction} from "firebase/firestore";
 
-    const [formData,setFormData] = useState({
+import { db } from "./firebase";
+
+function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
+    const [selectedCar, setSelectedCar] = useState(null);
+
+    const [formData, setFormData] = useState({
         FromDate: "",
         ToDate: "",
         TotalCount: ""
     });
 
     const dialogRef = useRef(null);
-
     const rentDialogRef = useRef(null);
 
-    const [isAddCarOpen,setIsAddCarOpen] = useState(false);
+    const [isAddCarOpen, setIsAddCarOpen] =
+        useState(false);
 
     function handleCardClick(car) {
         setSelectedCar(car);
 
-        if (dialogRef.current && !dialogRef.current.open) {
+        if (dialogRef.current && !dialogRef.current.open
+        ) {
             dialogRef.current.showModal();
         }
     }
@@ -55,20 +60,17 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
         });
     }
 
-    const handleChange = (e) => {
-        const {
-            name,
-            value
-        } = e.target;
+    function handleChange(e) {
+        const {name,value} = e.target;
 
         setFormData((prev) => ({
             ...prev,
             [name]: value
         }));
-    };
+    }
 
     function calculateTotalPrice() {
-        if (!formData.FromDate || !formData.ToDate || !selectedCar) {
+        if (!formData.FromDate || !formData.ToDate ||!selectedCar) {
             return "";
         }
 
@@ -76,9 +78,8 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
 
         const toDate = new Date(formData.ToDate);
 
-        fromDate.setHours(0,0,0,0);
-
-        toDate.setHours(0,0,0,0);
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(0, 0, 0, 0);
 
         if (toDate < fromDate) {
             return "";
@@ -86,13 +87,57 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
 
         const days = Math.max(1,Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)));
 
-        return (days * selectedCar.pricePerDay);
+        return (days * Number(selectedCar.pricePerDay));
     }
 
-    function handleRentSubmit(e) {
+    async function getNextHistoryId() {
+        const counterRef = doc(
+            db,
+            "counters",
+            "history"
+        );
+
+        const nextId =
+            await runTransaction(
+                db,
+                async (transaction) => {
+                    const counterSnapshot =
+                        await transaction.get(
+                            counterRef
+                        );
+
+                    const currentId =
+                        counterSnapshot.exists()
+                            ? Number(
+                                counterSnapshot
+                                    .data()
+                                    .nextId
+                            ) || 1
+                            : 1;
+
+                    transaction.set(
+                        counterRef,
+                        {
+                            nextId:
+                                currentId + 1
+                        },
+                        {
+                            merge: true
+                        }
+                    );
+
+                    return currentId;
+                }
+            );
+
+        return nextId;
+    }
+
+    async function handleRentSubmit(e) {
         e.preventDefault();
 
-        if (!formData.FromDate || !formData.ToDate) {
+        if (!formData.FromDate || !formData.ToDate
+        ) {
             alert("You should fill all the fields!");
             return;
         }
@@ -103,11 +148,9 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
 
         const ToDate = new Date(formData.ToDate);
 
-        today.setHours(0,0,0,0);
-
-        FromDate.setHours(0,0,0,0);
-
-        ToDate.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
+        FromDate.setHours(0, 0, 0, 0);
+        ToDate.setHours(0, 0, 0, 0);
 
         if (FromDate < today) {
             alert("The starting date cannot be in the past!");
@@ -123,51 +166,199 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
             return;
         }
 
-        const totalPrice = calculateTotalPrice();
+        if (!user) {
+            alert("You must be logged in to rent a car.");
+            return;
+        }
 
-        const newHistory = {
-            id:getLastID() + 1,
-            carID:selectedCar.id,
-            FromDate:formData.FromDate,
-            ToDate:formData.ToDate,
-            Total:totalPrice,
-            Email:userEmail
-        };
+        if (!selectedCar.available) {
+            alert("This car is currently rented.");
+            return;
+        }
 
-        setHistoryData(
-            (prevHistory) => [
-                ...prevHistory,
-                newHistory
-            ]
-        );
+        try {
+            const historyId =
+                await getNextHistoryId();
 
-        setCars((prevCars) =>prevCars.map((car) => car.id === selectedCar.id ? {...car,available:false}: car));
+            const totalPrice =
+                calculateTotalPrice();
 
-        alert("Car rented successfully!");
+            const historyRef = doc(
+                collection(
+                    db,
+                    "history"
+                )
+            );
 
-        handleRentClose();
+            const carDocumentId =
+                selectedCar.firebaseId;
 
-        setSelectedCar(null);
+            if (!carDocumentId) {
+                throw new Error(
+                    "Car document ID is missing."
+                );
+            }
+
+            const carRef = doc(
+                db,
+                "cars",
+                carDocumentId
+            );
+
+            const newHistory = {
+                id: historyId,
+                carID: Number(
+                    selectedCar.id
+                ),
+                FromDate:
+                    formData.FromDate,
+                ToDate:
+                    formData.ToDate,
+                Total: Number(
+                    totalPrice
+                ),
+                Email:
+                    user.email,
+                uid:
+                    user.uid
+            };
+
+            await runTransaction(
+                db,
+                async (transaction) => {
+                    const carSnapshot =
+                        await transaction.get(
+                            carRef
+                        );
+
+                    if (
+                        !carSnapshot.exists()
+                    ) {
+                        throw new Error(
+                            "Car no longer exists."
+                        );
+                    }
+
+                    const currentCar =
+                        carSnapshot.data();
+
+                    if (currentCar.available === false) {
+                        throw new Error(
+                            "This car has already been rented."
+                        );
+                    }
+
+                    transaction.set(
+                        historyRef,
+                        newHistory
+                    );
+
+                    transaction.update(
+                        carRef,
+                        {
+                            available:
+                                false
+                        }
+                    );
+                }
+            );
+
+            setCars(
+                (prevCars) =>
+                    prevCars.map(
+                        (car) =>
+                            car.firebaseId ===
+                            carDocumentId
+                                ? {
+                                    ...car,
+                                    available:
+                                        false
+                                }
+                                : car
+                    )
+            );
+
+            alert("Car rented successfully!");
+
+            handleRentClose();
+            setSelectedCar(null);
+
+        } catch (error) {
+            console.error(
+                "Rental error:",
+                error
+            );
+
+            alert(`Failed to rent the car: ${error.message}`);
+        }
     }
 
-    function handleRemoveClick() {
+    async function handleRemoveClick() {
         if (!selectedCar) {
             return;
         }
 
-        const userConfirmed = window.confirm("Are you sure you want to delete this item?");
+        const userConfirmed =
+            window.confirm(
+                "Are you sure you want to delete this item?"
+            );
 
         if (!userConfirmed) {
             return;
         }
 
-        setCars((prevCars) => prevCars.filter((car) => car.id !== selectedCar.id));
+        const carDocumentId =
+            selectedCar.firebaseId;
 
-        closeDialog();
+        if (!carDocumentId) {
+            alert("Car document ID is missing.");
+            return;
+        }
+
+        try {
+            const carRef = doc(
+                db,
+                "cars",
+                carDocumentId
+            );
+
+            await runTransaction(
+                db,
+                async (transaction) => {
+                    transaction.delete(
+                        carRef
+                    );
+                }
+            );
+
+            setCars(
+                (prevCars) =>
+                    prevCars.filter(
+                        (car) =>
+                            car.firebaseId !==
+                            carDocumentId
+                    )
+            );
+
+            closeDialog();
+
+            alert("Car removed successfully!");
+
+        } catch (error) {
+            console.error(
+                "Error removing car:",
+                error
+            );
+
+            alert(`Failed to remove car: ${error.message}`);
+        }
     }
 
     function handleEditCarOpen() {
-        if (dialogRef.current && dialogRef.current.open) {
+        if (
+            dialogRef.current &&
+            dialogRef.current.open
+        ) {
             dialogRef.current.close();
         }
 
@@ -179,119 +370,137 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
         setSelectedCar(null);
     }
 
-    function getLastID() {
-        const savedHistory = JSON.parse(localStorage.getItem("History")) || [];
-
-        if (savedHistory.length === 0) {
-            return 0;
-        }
-
-        const ids = savedHistory.map((history) => Number(history.id) || 0);
-
-        return Math.max(...ids);
-    }
-
-
     return (
         <div className="Car-Rental">
 
             <div className="container">
 
                 <Header
-                    userEmail={userEmail}
+                    user={user}
+                    userData={userData}
                     isAdmin={isAdmin}
-                    setUserEmail={
-                        setUserEmail
-                    }
                     cars={cars}
                     setCars={setCars}
                 />
 
                 <div className="contents">
 
-                    <ul className="grid">
+                    {carsLoading ? (
 
-                        {cars.map((car) => {
+                        <div className="cars-loading">
+                            <div className="loader"></div>
 
-                            const status =
-                                car.available
-                                    ? "available"
-                                    : "rented";
+                            <h2>
+                                Loading cars...
+                            </h2>
 
-                            return (
+                            <p>
+                                Please wait while
+                                we load all cars.
+                            </p>
+                        </div>
 
-                                <li
-                                    key={car.id}
-                                    className={
-                                        `card ${status}`
-                                    }
-                                    onClick={() =>
-                                        handleCardClick(
-                                            car
-                                        )
-                                    }
-                                >
+                    ) : cars.length === 0 ? (
 
-                                    <img
-                                        src={
-                                            car.image
+                        <div className="cars-loading">
+                            <h2>
+                                No cars available
+                            </h2>
+
+                            {isAdmin && (
+                                <p>
+                                    Add a new car
+                                    to get started.
+                                </p>
+                            )}
+                        </div>
+
+                    ) : (
+
+                        <ul className="grid">
+
+                            {cars.map((car) => {
+
+                                const status =
+                                    car.available
+                                        ? "available"
+                                        : "rented";
+
+                                return (
+                                    <li
+                                        key={
+                                            car.firebaseId
                                         }
-                                        alt={
-                                            `${car.brand} ${car.model}`
+                                        className={
+                                            `card ${status}`
                                         }
-                                    />
-
-                                    <h3>
-                                        {
-                                            car.brand
-                                        }{" "}
-                                        {
-                                            car.model
+                                        onClick={() =>
+                                            handleCardClick(
+                                                car
+                                            )
                                         }
-                                    </h3>
+                                    >
 
-                                    <p>
-                                        {
-                                            car.year
-                                        }{" "}
-                                        •{" "}
-                                        {
-                                            car.type
-                                        }
-                                    </p>
+                                        <img
+                                            src={
+                                                car.image
+                                            }
+                                            alt={
+                                                `${car.brand} ${car.model}`
+                                            }
+                                        />
 
-                                    <p>
-                                        {
-                                            car.transmission
-                                        }{" "}
-                                        •{" "}
-                                        {
-                                            car.fuel
-                                        }
-                                    </p>
+                                        <h3>
+                                            {
+                                                car.brand
+                                            }{" "}
+                                            {
+                                                car.model
+                                            }
+                                        </h3>
 
-                                    <p>
-                                        $
-                                        {
-                                            car.pricePerDay
-                                        }{" "}
-                                        / day
-                                    </p>
+                                        <p>
+                                            {
+                                                car.year
+                                            }{" "}
+                                            •{" "}
+                                            {
+                                                car.type
+                                            }
+                                        </p>
 
-                                    <span className="status">
-                                        {
-                                            car.available
-                                                ? "Available"
-                                                : "Rented"
-                                        }
-                                    </span>
+                                        <p>
+                                            {
+                                                car.transmission
+                                            }{" "}
+                                            •{" "}
+                                            {
+                                                car.fuel
+                                            }
+                                        </p>
 
-                                </li>
+                                        <p>
+                                            $
+                                            {
+                                                car.pricePerDay
+                                            }{" "}
+                                            / day
+                                        </p>
 
-                            );
-                        })}
+                                        <span className="status">
+                                            {
+                                                car.available
+                                                    ? "Available"
+                                                    : "Rented"
+                                            }
+                                        </span>
 
-                    </ul>
+                                    </li>
+                                );
+                            })}
+
+                        </ul>
+                    )}
 
                     <dialog
                         ref={dialogRef}
@@ -427,7 +636,6 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
 
                                 {isAdmin && (
                                     <>
-
                                         <button
                                             type="button"
                                             className="edit-button"
@@ -447,7 +655,6 @@ function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,se
                                         >
                                             Remove This Car
                                         </button>
-
                                     </>
                                 )}
 

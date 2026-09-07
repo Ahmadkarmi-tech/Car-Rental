@@ -1,5 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import {
+    createUserWithEmailAndPassword,
+    signOut
+} from "firebase/auth";
+import {
+    doc,
+    setDoc
+} from "firebase/firestore";
+import { auth, db } from "./firebase";
 
 function SignupPage() {
     const navigate = useNavigate();
@@ -18,7 +27,7 @@ function SignupPage() {
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        const {name,value} = e.target;
+        const { name, value } = e.target;
 
         setFormData((prev) => ({
             ...prev,
@@ -26,10 +35,25 @@ function SignupPage() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const clearForm = () => {
+        setFormData({
+            firstName: "",
+            lastName: "",
+            email: "",
+            phoneNumber: "",
+            password: "",
+            confirmPassword: "",
+            dateOfBirth: "",
+            licenseNumber: ""
+        });
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const isFormComplete = Object.values(formData).every((value) => value !== "");
+        const isFormComplete = Object.values(formData).every(
+            (value) => value.trim() !== ""
+        );
 
         if (!isFormComplete) {
             alert("Please fill in all fields.");
@@ -52,65 +76,78 @@ function SignupPage() {
             return;
         }
 
-        const minimumBirthDate =new Date(
-                today.getFullYear() - 18,
-                today.getMonth(),
-                today.getDate()
-            );
+        const minimumBirthDate = new Date(
+            today.getFullYear() - 18,
+            today.getMonth(),
+            today.getDate()
+        );
 
         if (inputDate > minimumBirthDate) {
-            alert("You must be 18 years or older to create an account.");
+            alert(
+                "You must be 18 years or older to create an account."
+            );
             return;
         }
 
         setLoading(true);
 
-        const savedUsers =JSON.parse(localStorage.getItem("users")) || [];
+        try {
+            const userCredential =
+                await createUserWithEmailAndPassword(
+                    auth,
+                    formData.email.trim(),
+                    formData.password
+                );
 
-        const existingUser = savedUsers.find((user) => user.email === formData.email);
+            const user = userCredential.user;
 
-        if (existingUser) {
-            alert("Email is already in use.");
+            await setDoc(
+                doc(db, "users", user.uid),
+                {
+                    uid: user.uid,
+                    firstName: formData.firstName.trim(),
+                    lastName: formData.lastName.trim(),
+                    email: formData.email.trim(),
+                    phoneNumber: formData.phoneNumber.trim(),
+                    dateOfBirth: formData.dateOfBirth,
+                    licenseNumber: formData.licenseNumber.trim()
+                }
+            );
 
+            clearForm();
+
+            await signOut(auth);
+
+            alert("Account created successfully!");
+
+            navigate("/Login", {
+                replace: true
+            });
+        } catch (error) {
+            console.error("Signup error:", error);
+
+            if (error.code === "auth/email-already-in-use") {
+                alert("Email is already in use.");
+            } else if (error.code === "auth/invalid-email") {
+                alert("Please enter a valid email address.");
+            } else if (error.code === "auth/weak-password") {
+                alert("Password is too weak.");
+            } else if (error.code === "permission-denied") {
+                alert(
+                    "Account was created, but Firestore permission was denied."
+                );
+            } else {
+                alert(
+                    `Failed to create account: ${error.message}`
+                );
+            }
+        } finally {
             setLoading(false);
-            return;
         }
-
-        const newUser = {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            phoneNumber:formData.phoneNumber,
-            password: formData.password,
-            dateOfBirth:formData.dateOfBirth,
-            licenseNumber:formData.licenseNumber
-        };
-
-        savedUsers.push(newUser);
-
-        localStorage.setItem("users",JSON.stringify(savedUsers));
-
-        alert("Account created successfully!");
-
-        setFormData({
-            firstName: "",
-            lastName: "",
-            email: "",
-            phoneNumber: "",
-            password: "",
-            confirmPassword: "",
-            dateOfBirth: "",
-            licenseNumber: ""
-        });
-
-        setLoading(false);
-
-        navigate("/Login");
     };
 
     return (
         <div className="login-page">
-
             <div className="login-card">
 
                 <h2>Signup</h2>
@@ -121,7 +158,6 @@ function SignupPage() {
                 >
 
                     <div className="form-group">
-
                         <label htmlFor="firstName">
                             First Name:
                         </label>
@@ -131,18 +167,12 @@ function SignupPage() {
                             name="firstName"
                             id="firstName"
                             placeholder="Enter your first name..."
-                            value={
-                                formData.firstName
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.firstName}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="lastName">
                             Last Name:
                         </label>
@@ -152,18 +182,12 @@ function SignupPage() {
                             name="lastName"
                             id="lastName"
                             placeholder="Enter your last name..."
-                            value={
-                                formData.lastName
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.lastName}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="email">
                             Email:
                         </label>
@@ -173,18 +197,12 @@ function SignupPage() {
                             name="email"
                             id="email"
                             placeholder="Enter your email..."
-                            value={
-                                formData.email
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.email}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="phoneNumber">
                             Phone Number:
                         </label>
@@ -194,18 +212,12 @@ function SignupPage() {
                             name="phoneNumber"
                             id="phoneNumber"
                             placeholder="Enter your phone number..."
-                            value={
-                                formData.phoneNumber
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.phoneNumber}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="password">
                             Password:
                         </label>
@@ -215,18 +227,12 @@ function SignupPage() {
                             name="password"
                             id="password"
                             placeholder="Enter your password..."
-                            value={
-                                formData.password
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.password}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="confirmPassword">
                             Confirm Password:
                         </label>
@@ -236,18 +242,12 @@ function SignupPage() {
                             name="confirmPassword"
                             id="confirmPassword"
                             placeholder="Enter your password again..."
-                            value={
-                                formData.confirmPassword
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="dateOfBirth">
                             Date of Birth:
                         </label>
@@ -256,18 +256,12 @@ function SignupPage() {
                             type="date"
                             name="dateOfBirth"
                             id="dateOfBirth"
-                            value={
-                                formData.dateOfBirth
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.dateOfBirth}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <div className="form-group">
-
                         <label htmlFor="licenseNumber">
                             Driver's License Number:
                         </label>
@@ -277,14 +271,9 @@ function SignupPage() {
                             name="licenseNumber"
                             id="licenseNumber"
                             placeholder="Enter your license number..."
-                            value={
-                                formData.licenseNumber
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.licenseNumber}
+                            onChange={handleChange}
                         />
-
                     </div>
 
                     <button
@@ -307,7 +296,6 @@ function SignupPage() {
                 </form>
 
             </div>
-
         </div>
     );
 }
