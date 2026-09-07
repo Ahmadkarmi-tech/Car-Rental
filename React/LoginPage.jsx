@@ -13,45 +13,27 @@ function LoginPage({ setUserEmail }) {
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        const {
-            name,
-            value,
-            type,
-            checked
-        } = e.target;
+        const {name,value,type,checked} = e.target;
 
         setFormData((prev) => ({
             ...prev,
-            [name]:
-                type === "checkbox"
-                    ? checked
-                    : value
+            [name]: type === "checkbox" ? checked : value
         }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (
-            !formData.email ||
-            !formData.password
-        ) {
+        if (!formData.email || !formData.password) {
             alert("Please fill in all fields.");
             return;
         }
 
         setLoading(true);
 
-        const savedUsers =
-            JSON.parse(
-                localStorage.getItem("users")
-            ) || [];
+        const savedUsers =JSON.parse(localStorage.getItem("users")) || [];
 
-        const user = savedUsers.find(
-            (item) =>
-                item.email === formData.email &&
-                item.password === formData.password
-        );
+        const user = savedUsers.find((item) => item.email === formData.email && item.password === formData.password);
 
         if (!user) {
             alert("Wrong email or password!");
@@ -60,23 +42,13 @@ function LoginPage({ setUserEmail }) {
         }
 
         if (formData.rememberMe) {
-            localStorage.setItem(
-                "userEmail",
-                user.email
-            );
+            localStorage.setItem("userEmail",user.email);
 
-            sessionStorage.removeItem(
-                "userEmail"
-            );
+            sessionStorage.removeItem("userEmail");
         } else {
-            sessionStorage.setItem(
-                "userEmail",
-                user.email
-            );
+            sessionStorage.setItem("userEmail",user.email);
 
-            localStorage.removeItem(
-                "userEmail"
-            );
+            localStorage.removeItem("userEmail");
         }
 
         setUserEmail(user.email);

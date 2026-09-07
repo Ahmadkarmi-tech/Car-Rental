@@ -1,24 +1,9 @@
-import {
-    useEffect,
-    useRef,
-    useState
-} from "react";
+import {useEffect,useRef,useState} from "react";
 
-function AddCarDialog({
-    isOpen,
-    onClose,
-    cars,
-    setCars,
-    isAdd,
-    selectedCar
-}) {
-    const dialogRef =
-        useRef(null);
+function AddCarDialog({isOpen,onClose,cars,setCars,isAdd,selectedCar}) {
+    const dialogRef = useRef(null);
 
-    const [
-        formData,
-        setFormData
-    ] = useState({
+    const [formData,setFormData] = useState({
         brand: "",
         model: "",
         year: "",
@@ -34,60 +19,41 @@ function AddCarDialog({
         image: ""
     });
 
-    const [
-        loading,
-        setLoading
-    ] = useState(false);
+    const [loading,setLoading] = useState(false);
 
     useEffect(() => {
 
         if (isOpen) {
 
-            if (
-                !isAdd &&
-                selectedCar
-            ) {
+            if (!isAdd &&selectedCar) {
 
                 setFormData({
                     brand:
-                        selectedCar.brand ||
-                        "",
+                        selectedCar.brand || "",
                     model:
-                        selectedCar.model ||
-                        "",
+                        selectedCar.model || "",
                     year:
-                        selectedCar.year ||
-                        "",
+                        selectedCar.year || "",
                     type:
-                        selectedCar.type ||
-                        "",
+                        selectedCar.type || "",
                     transmission:
-                        selectedCar.transmission ||
-                        "",
+                        selectedCar.transmission || "",
                     fuel:
-                        selectedCar.fuel ||
-                        "",
+                        selectedCar.fuel || "",
                     seats:
-                        selectedCar.seats ||
-                        "",
+                        selectedCar.seats || "",
                     doors:
-                        selectedCar.doors ||
-                        "",
+                        selectedCar.doors || "",
                     pricePerDay:
-                        selectedCar.pricePerDay ||
-                        "",
+                        selectedCar.pricePerDay || "",
                     location:
-                        selectedCar.location ||
-                        "",
+                        selectedCar.location || "",
                     available:
-                        selectedCar.available ??
-                        true,
+                        selectedCar.available ?? true,
                     mileage:
-                        selectedCar.mileage ||
-                        "",
+                        selectedCar.mileage || "",
                     image:
-                        selectedCar.image ||
-                        ""
+                        selectedCar.image || ""
                 });
 
             } else {
@@ -110,68 +76,46 @@ function AddCarDialog({
 
             }
 
-            if (
-                dialogRef.current &&
-                !dialogRef.current.open
-            ) {
+            if (dialogRef.current && !dialogRef.current.open) {
                 dialogRef.current.showModal();
             }
 
         } else {
 
-            if (
-                dialogRef.current &&
-                dialogRef.current.open
-            ) {
+            if (dialogRef.current && dialogRef.current.open) {
                 dialogRef.current.close();
             }
 
         }
 
-    }, [
-        isOpen,
-        isAdd,
-        selectedCar
-    ]);
+    }, [isOpen,isAdd,selectedCar]);
 
     function handleChange(e) {
 
-        const {
-            name,
-            value,
-            type,
-            files
-        } = e.target;
+        const {name,value,type,files} = e.target;
 
-        if (
-            type === "file"
-        ) {
+        if (type === "file") {
 
-            const file =
-                files[0];
+            const file = files[0];
 
             if (!file) {
                 return;
             }
 
-            const reader =
-                new FileReader();
+            const reader = new FileReader();
 
             reader.onload = () => {
 
                 setFormData(
                     (prev) => ({
                         ...prev,
-                        image:
-                            reader.result
+                        image: reader.result
                     })
                 );
 
             };
 
-            reader.readAsDataURL(
-                file
-            );
+            reader.readAsDataURL(file);
 
             return;
         }
@@ -203,16 +147,10 @@ function AddCarDialog({
             "image"
         ];
 
-        const isFormComplete =
-            requiredFields.every(
-                (field) =>
-                    formData[field] !== ""
-            );
+        const isFormComplete = requiredFields.every((field) => formData[field] !== "");
 
         if (!isFormComplete) {
-            alert(
-                "Please fill in all fields."
-            );
+            alert("Please fill in all fields.");
             return;
         }
 
@@ -223,44 +161,20 @@ function AddCarDialog({
             if (isAdd) {
 
                 const newCar = {
-                    id:
-                        Date.now().toString(),
-                    brand:
-                        formData.brand,
-                    model:
-                        formData.model,
-                    year:
-                        Number(
-                            formData.year
-                        ),
-                    type:
-                        formData.type,
-                    transmission:
-                        formData.transmission,
-                    fuel:
-                        formData.fuel,
-                    seats:
-                        Number(
-                            formData.seats
-                        ),
-                    doors:
-                        Number(
-                            formData.doors
-                        ),
-                    pricePerDay:
-                        Number(
-                            formData.pricePerDay
-                        ),
-                    location:
-                        formData.location,
-                    available:
-                        true,
-                    mileage:
-                        Number(
-                            formData.mileage
-                        ),
-                    image:
-                        formData.image
+                    id:getLastID() + 1,
+                    brand:formData.brand,
+                    model:formData.model,
+                    year:Number(formData.year),
+                    type:formData.type,
+                    transmission:formData.transmission,
+                    fuel:formData.fuel,
+                    seats:Number(formData.seats),
+                    doors:Number(formData.doors),
+                    pricePerDay:Number(formData.pricePerDay),
+                    location:formData.location,
+                    available:true,
+                    mileage:Number(formData.mileage),
+                    image:formData.image
                 };
 
                 setCars(
@@ -277,74 +191,34 @@ function AddCarDialog({
             } else {
 
                 const updatedCar = {
-                    id:
-                        selectedCar.id,
-                    brand:
-                        formData.brand,
-                    model:
-                        formData.model,
-                    year:
-                        Number(
-                            formData.year
-                        ),
-                    type:
-                        formData.type,
-                    transmission:
-                        formData.transmission,
-                    fuel:
-                        formData.fuel,
-                    seats:
-                        Number(
-                            formData.seats
-                        ),
-                    doors:
-                        Number(
-                            formData.doors
-                        ),
-                    pricePerDay:
-                        Number(
-                            formData.pricePerDay
-                        ),
-                    location:
-                        formData.location,
-                    available:
-                        selectedCar.available,
-                    mileage:
-                        Number(
-                            formData.mileage
-                        ),
-                    image:
-                        formData.image
+                    id:selectedCar.id,
+                    brand:formData.brand,
+                    model:formData.model,
+                    year:Number(formData.year),
+                    type:formData.type,
+                    transmission:formData.transmission,
+                    fuel:formData.fuel,
+                    seats:Number(formData.seats),
+                    doors:Number(formData.doors),
+                    pricePerDay:Number(formData.pricePerDay),
+                    location:formData.location,
+                    available:selectedCar.available,
+                    mileage:Number(formData.mileage),
+                    image:formData.image
                 };
 
-                setCars(
-                    (prevCars) =>
-                        prevCars.map(
-                            (car) =>
-                                car.id ===
-                                selectedCar.id
-                                    ? updatedCar
-                                    : car
-                        )
-                );
+                setCars((prevCars) => prevCars.map((car) =>car.id === selectedCar.id ? updatedCar : car));
 
-                alert(
-                    "Car updated successfully!"
-                );
+                alert("Car updated successfully!");
             }
 
             onClose();
 
         } catch (error) {
 
-            console.error(
-                "Error saving car:",
-                error
-            );
+            console.error("Error saving car:",error);
 
-            alert(
-                "Failed to save the car."
-            );
+            alert("Failed to save the car.");
 
         } finally {
 
@@ -352,6 +226,19 @@ function AddCarDialog({
 
         }
     }
+
+    function getLastID() {
+        const savedCars = JSON.parse(localStorage.getItem("Cars")) || [];
+
+        if (savedCars.length === 0) {
+            return 0;
+        }
+
+        const ids = savedCars.map((car) => Number(car.id) || 0);
+
+        return Math.max(...ids);
+    }
+
 
     return (
 

@@ -1,20 +1,7 @@
 import Header from "./Header";
 
-function History({
-    userEmail,
-    isAdmin,
-    history,
-    setUserEmail,
-    cars,
-    setCars
-}) {
-    const selectedHistory =
-        isAdmin
-            ? history
-            : history.filter(
-                (hist) =>
-                    hist.Email === userEmail
-            );
+function History({userEmail,isAdmin,history,setUserEmail,cars,setCars}) {
+    const selectedHistory = isAdmin ? history : history.filter((hist) => hist.Email === userEmail);
 
     return (
         <div className="Car-Rental">
@@ -69,47 +56,32 @@ function History({
 
                         <tbody>
 
-                            {selectedHistory.length >
-                            0 ? (
+                            {selectedHistory.length > 0 ? (
 
-                                selectedHistory.map(
-                                    (hist) => (
+                                selectedHistory.map( (hist) => (
 
                                         <tr
-                                            key={
-                                                hist.id
-                                            }
+                                            key={hist.id}
                                         >
 
                                             <td>
-                                                {
-                                                    hist.id
-                                                }
+                                                {hist.id}
                                             </td>
 
                                             <td>
-                                                {
-                                                    hist.carID
-                                                }
+                                                {hist.carID}
                                             </td>
 
                                             <td>
-                                                {
-                                                    hist.FromDate
-                                                }
+                                                {hist.FromDate}
                                             </td>
 
                                             <td>
-                                                {
-                                                    hist.ToDate
-                                                }
+                                                {hist.ToDate}
                                             </td>
 
                                             <td>
-                                                $
-                                                {
-                                                    hist.Total
-                                                }
+                                                ${hist.Total}
                                             </td>
 
                                         </tr>

@@ -59,21 +59,14 @@ function App() {
     }, []);
 
     useEffect(() => {
-        localStorage.setItem(
-            "Cars",
-            JSON.stringify(cars)
-        );
+        localStorage.setItem("Cars",JSON.stringify(cars));
     }, [cars]);
 
     useEffect(() => {
-        localStorage.setItem(
-            "History",
-            JSON.stringify(history)
-        );
+        localStorage.setItem("History",JSON.stringify(history));
     }, [history]);
 
-    const isAdmin =
-        userEmail === "Admin@gmail.com";
+    const isAdmin = userEmail === "Admin@gmail.com";
 
     const router =
         createBrowserRouter([

@@ -2,56 +2,31 @@ import { useRef, useState } from "react";
 import Header from "./Header";
 import AddCarDialog from "./AddCarDialog";
 
-function HomePage({
-    userEmail,
-    isAdmin,
-    setHistoryData,
-    history,
-    setUserEmail,
-    cars,
-    setCars
-}) {
-    const [
-        selectedCar,
-        setSelectedCar
-    ] = useState(null);
+function HomePage({userEmail,isAdmin,setHistoryData,history,setUserEmail,cars,setCars}) {
+    const [selectedCar,setSelectedCar] = useState(null);
 
-    const [
-        formData,
-        setFormData
-    ] = useState({
+    const [formData,setFormData] = useState({
         FromDate: "",
         ToDate: "",
         TotalCount: ""
     });
 
-    const dialogRef =
-        useRef(null);
+    const dialogRef = useRef(null);
 
-    const rentDialogRef =
-        useRef(null);
+    const rentDialogRef = useRef(null);
 
-    const [
-        isAddCarOpen,
-        setIsAddCarOpen
-    ] = useState(false);
+    const [isAddCarOpen,setIsAddCarOpen] = useState(false);
 
     function handleCardClick(car) {
         setSelectedCar(car);
 
-        if (
-            dialogRef.current &&
-            !dialogRef.current.open
-        ) {
+        if (dialogRef.current && !dialogRef.current.open) {
             dialogRef.current.showModal();
         }
     }
 
     function closeDialog() {
-        if (
-            dialogRef.current &&
-            dialogRef.current.open
-        ) {
+        if (dialogRef.current && dialogRef.current.open) {
             dialogRef.current.close();
         }
 
@@ -59,26 +34,17 @@ function HomePage({
     }
 
     function handleRentClick() {
-        if (
-            dialogRef.current &&
-            dialogRef.current.open
-        ) {
+        if (dialogRef.current && dialogRef.current.open) {
             dialogRef.current.close();
         }
 
-        if (
-            rentDialogRef.current &&
-            !rentDialogRef.current.open
-        ) {
+        if (rentDialogRef.current && !rentDialogRef.current.open) {
             rentDialogRef.current.showModal();
         }
     }
 
     function handleRentClose() {
-        if (
-            rentDialogRef.current &&
-            rentDialogRef.current.open
-        ) {
+        if (rentDialogRef.current && rentDialogRef.current.open) {
             rentDialogRef.current.close();
         }
 
@@ -102,121 +68,54 @@ function HomePage({
     };
 
     function calculateTotalPrice() {
-        if (
-            !formData.FromDate ||
-            !formData.ToDate ||
-            !selectedCar
-        ) {
+        if (!formData.FromDate || !formData.ToDate || !selectedCar) {
             return "";
         }
 
-        const fromDate =
-            new Date(
-                formData.FromDate
-            );
+        const fromDate = new Date(formData.FromDate);
 
-        const toDate =
-            new Date(
-                formData.ToDate
-            );
+        const toDate = new Date(formData.ToDate);
 
-        fromDate.setHours(
-            0,
-            0,
-            0,
-            0
-        );
+        fromDate.setHours(0,0,0,0);
 
-        toDate.setHours(
-            0,
-            0,
-            0,
-            0
-        );
+        toDate.setHours(0,0,0,0);
 
         if (toDate < fromDate) {
             return "";
         }
 
-        const days = Math.max(
-            1,
-            Math.ceil(
-                (
-                    toDate - fromDate
-                ) /
-                (
-                    1000 *
-                    60 *
-                    60 *
-                    24
-                )
-            )
-        );
+        const days = Math.max(1,Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)));
 
-        return (
-            days *
-            selectedCar.pricePerDay
-        );
+        return (days * selectedCar.pricePerDay);
     }
 
     function handleRentSubmit(e) {
         e.preventDefault();
 
-        if (
-            !formData.FromDate ||
-            !formData.ToDate
-        ) {
-            alert(
-                "You should fill all the fields!"
-            );
+        if (!formData.FromDate || !formData.ToDate) {
+            alert("You should fill all the fields!");
             return;
         }
 
-        const today =
-            new Date();
+        const today = new Date();
 
-        const FromDate =
-            new Date(
-                formData.FromDate
-            );
+        const FromDate = new Date(formData.FromDate);
 
-        const ToDate =
-            new Date(
-                formData.ToDate
-            );
+        const ToDate = new Date(formData.ToDate);
 
-        today.setHours(
-            0,
-            0,
-            0,
-            0
-        );
+        today.setHours(0,0,0,0);
 
-        FromDate.setHours(
-            0,
-            0,
-            0,
-            0
-        );
+        FromDate.setHours(0,0,0,0);
 
-        ToDate.setHours(
-            0,
-            0,
-            0,
-            0
-        );
+        ToDate.setHours(0,0,0,0);
 
         if (FromDate < today) {
-            alert(
-                "The starting date cannot be in the past!"
-            );
+            alert("The starting date cannot be in the past!");
             return;
         }
 
         if (ToDate < FromDate) {
-            alert(
-                "The return date cannot be before the starting date!"
-            );
+            alert("The return date cannot be before the starting date!");
             return;
         }
 
@@ -224,22 +123,15 @@ function HomePage({
             return;
         }
 
-        const totalPrice =
-            calculateTotalPrice();
+        const totalPrice = calculateTotalPrice();
 
         const newHistory = {
-            id:
-                getLastID() + 1,
-            carID:
-                selectedCar.id,
-            FromDate:
-                formData.FromDate,
-            ToDate:
-                formData.ToDate,
-            Total:
-                totalPrice,
-            Email:
-                userEmail
+            id:getLastID() + 1,
+            carID:selectedCar.id,
+            FromDate:formData.FromDate,
+            ToDate:formData.ToDate,
+            Total:totalPrice,
+            Email:userEmail
         };
 
         setHistoryData(
@@ -249,24 +141,9 @@ function HomePage({
             ]
         );
 
-        setCars(
-            (prevCars) =>
-                prevCars.map(
-                    (car) =>
-                        car.id ===
-                            selectedCar.id
-                            ? {
-                                ...car,
-                                available:
-                                    false
-                            }
-                            : car
-                )
-        );
+        setCars((prevCars) =>prevCars.map((car) => car.id === selectedCar.id ? {...car,available:false}: car));
 
-        alert(
-            "Car rented successfully!"
-        );
+        alert("Car rented successfully!");
 
         handleRentClose();
 
@@ -278,32 +155,19 @@ function HomePage({
             return;
         }
 
-        const userConfirmed =
-            window.confirm(
-                "Are you sure you want to delete this item?"
-            );
+        const userConfirmed = window.confirm("Are you sure you want to delete this item?");
 
         if (!userConfirmed) {
             return;
         }
 
-        setCars(
-            (prevCars) =>
-                prevCars.filter(
-                    (car) =>
-                        car.id !==
-                        selectedCar.id
-                )
-        );
+        setCars((prevCars) => prevCars.filter((car) => car.id !== selectedCar.id));
 
         closeDialog();
     }
 
     function handleEditCarOpen() {
-        if (
-            dialogRef.current &&
-            dialogRef.current.open
-        ) {
+        if (dialogRef.current && dialogRef.current.open) {
             dialogRef.current.close();
         }
 

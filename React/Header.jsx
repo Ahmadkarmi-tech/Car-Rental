@@ -1,70 +1,34 @@
-import {
-    NavLink,
-    useNavigate
-} from "react-router-dom";
+import {NavLink,useNavigate} from "react-router-dom";
 
-import {
-    useEffect,
-    useRef,
-    useState
-} from "react";
+import {useEffect,useRef,useState} from "react";
 
 import AddCarDialog from "./AddCarDialog";
 
-function Header({
-    isAdmin,
-    userEmail,
-    setUserEmail,
-    cars,
-    setCars
-}) {
+function Header({isAdmin,userEmail,setUserEmail,cars,setCars}) {
     const navigate = useNavigate();
 
     const settingRef = useRef(null);
 
-    const [
-        isSettingOpen,
-        setIsSettingOpen
-    ] = useState(false);
+    const [isSettingOpen,setIsSettingOpen] = useState(false);
 
-    const [
-        isAddCarOpen,
-        setIsAddCarOpen
-    ] = useState(false);
+    const [isAddCarOpen,setIsAddCarOpen] = useState(false);
 
-    const [
-        currentUser,
-        setCurrentUser
-    ] = useState(null);
+    const [currentUser,setCurrentUser] = useState(null);
 
     useEffect(() => {
-        const savedUsers =
-            JSON.parse(
-                localStorage.getItem("users")
-            ) || [];
+        const savedUsers = JSON.parse( localStorage.getItem("users")) || [];
 
-        const user = savedUsers.find(
-            (item) =>
-                item.email === userEmail
-        );
+        const user = savedUsers.find((item) => item.email === userEmail);
 
         setCurrentUser(user || null);
     }, [userEmail]);
 
     useEffect(() => {
-        if (
-            settingRef.current &&
-            isSettingOpen &&
-            !settingRef.current.open
-        ) {
+        if (settingRef.current && isSettingOpen && !settingRef.current.open) {
             settingRef.current.showModal();
         }
 
-        if (
-            settingRef.current &&
-            !isSettingOpen &&
-            settingRef.current.open
-        ) {
+        if (settingRef.current && !isSettingOpen && settingRef.current.open) {
             settingRef.current.close();
         }
     }, [isSettingOpen]);

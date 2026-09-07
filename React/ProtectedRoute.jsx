@@ -1,9 +1,6 @@
 import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({
-    userEmail,
-    children
-}) {
+function ProtectedRoute({userEmail,children}) {
     if (!userEmail) {
         return (
             <Navigate

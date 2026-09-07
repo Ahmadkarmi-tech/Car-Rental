@@ -18,10 +18,7 @@ function SignupPage() {
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        const {
-            name,
-            value
-        } = e.target;
+        const {name,value} = e.target;
 
         setFormData((prev) => ({
             ...prev,
@@ -32,72 +29,48 @@ function SignupPage() {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const isFormComplete =
-            Object.values(formData).every(
-                (value) => value !== ""
-            );
+        const isFormComplete = Object.values(formData).every((value) => value !== "");
 
         if (!isFormComplete) {
             alert("Please fill in all fields.");
             return;
         }
 
-        if (
-            formData.password !==
-            formData.confirmPassword
-        ) {
+        if (formData.password !== formData.confirmPassword) {
             alert("Passwords do not match.");
             return;
         }
 
         const today = new Date();
-        const inputDate =
-            new Date(formData.dateOfBirth);
+        const inputDate = new Date(formData.dateOfBirth);
 
         today.setHours(0, 0, 0, 0);
         inputDate.setHours(0, 0, 0, 0);
 
         if (inputDate > today) {
-            alert(
-                "The date of birth is invalid!"
-            );
+            alert("The date of birth is invalid!");
             return;
         }
 
-        const minimumBirthDate =
-            new Date(
+        const minimumBirthDate =new Date(
                 today.getFullYear() - 18,
                 today.getMonth(),
                 today.getDate()
             );
 
-        if (
-            inputDate > minimumBirthDate
-        ) {
-            alert(
-                "You must be 18 years or older to create an account."
-            );
+        if (inputDate > minimumBirthDate) {
+            alert("You must be 18 years or older to create an account.");
             return;
         }
 
         setLoading(true);
 
-        const savedUsers =
-            JSON.parse(
-                localStorage.getItem("users")
-            ) || [];
+        const savedUsers =JSON.parse(localStorage.getItem("users")) || [];
 
-        const existingUser =
-            savedUsers.find(
-                (user) =>
-                    user.email ===
-                    formData.email
-            );
+        const existingUser = savedUsers.find((user) => user.email === formData.email);
 
         if (existingUser) {
-            alert(
-                "Email is already in use."
-            );
+            alert("Email is already in use.");
 
             setLoading(false);
             return;
@@ -107,25 +80,17 @@ function SignupPage() {
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            phoneNumber:
-                formData.phoneNumber,
+            phoneNumber:formData.phoneNumber,
             password: formData.password,
-            dateOfBirth:
-                formData.dateOfBirth,
-            licenseNumber:
-                formData.licenseNumber
+            dateOfBirth:formData.dateOfBirth,
+            licenseNumber:formData.licenseNumber
         };
 
         savedUsers.push(newUser);
 
-        localStorage.setItem(
-            "users",
-            JSON.stringify(savedUsers)
-        );
+        localStorage.setItem("users",JSON.stringify(savedUsers));
 
-        alert(
-            "Account created successfully!"
-        );
+        alert("Account created successfully!");
 
         setFormData({
             firstName: "",
