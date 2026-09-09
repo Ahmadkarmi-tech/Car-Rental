@@ -9,10 +9,17 @@ import LoginPage from "../pages/LoginPage";
 import SignupPage from "../pages/SignupPage";
 import HomePage from "../pages/HomePage";
 import History from "../pages/History";
-import ProtectedRoute from "./ProtectedRoute";
 
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../services/firebase";
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../Layout/MainLayout";
+
+import {
+    onAuthStateChanged
+} from "firebase/auth";
+
+import {
+    auth
+} from "../services/firebase";
 
 
 function AppRoute() {
@@ -31,7 +38,6 @@ function AppRoute() {
                 (currentUser) => {
 
                     setUser(currentUser);
-
                     setAuthLoading(false);
                 }
             );
@@ -45,45 +51,38 @@ function AppRoute() {
         createBrowserRouter([
 
             {
-                path: "/",
-
                 element: (
                     <ProtectedRoute
                         user={user}
                         loading={authLoading}
                     >
-                        <HomePage />
+                        <MainLayout />
                     </ProtectedRoute>
-                )
-            },
+                ),
 
-            {
-                path: "/History",
+                children: [
 
-                element: (
-                    <ProtectedRoute
-                        user={user}
-                        loading={authLoading}
-                    >
-                        <History />
-                    </ProtectedRoute>
-                )
+                    {
+                        path: "/",
+                        element: <HomePage />
+                    },
+
+                    {
+                        path: "/History",
+                        element: <History />
+                    }
+
+                ]
             },
 
             {
                 path: "/Login",
-
-                element: (
-                    <LoginPage />
-                )
+                element: <LoginPage />
             },
 
             {
                 path: "/Signup",
-
-                element: (
-                    <SignupPage />
-                )
+                element: <SignupPage />
             }
 
         ]);

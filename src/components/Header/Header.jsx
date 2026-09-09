@@ -1,10 +1,11 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "firebase/auth";
 import AddCarDialog from "../Cars/AddCarDialog";
 import { auth } from "../../services/firebase";
 import logo from "../../assets/Images/Logo.webp";
 import settingsImage from "../../assets/Images/settings.png"
+import NavBar from "../Nav/NavBar";
 function Header({
     user,
     userData,
@@ -118,39 +119,7 @@ function Header({
                 </div>
             </div>
 
-            <nav className="menu">
-
-                <ul>
-
-                    <li>
-                        <NavLink
-                            to="/"
-                            className={({ isActive }) =>
-                                isActive
-                                    ? "button active"
-                                    : "button"
-                            }
-                        >
-                            🚗 Cars
-                        </NavLink>
-                    </li>
-
-                    <li>
-                        <NavLink
-                            to="/History"
-                            className={({ isActive }) =>
-                                isActive
-                                    ? "button active"
-                                    : "button"
-                            }
-                        >
-                            📋 History
-                        </NavLink>
-                    </li>
-
-                </ul>
-
-            </nav>
+            <NavBar/>
 
             <dialog
                 ref={settingRef}

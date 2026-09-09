@@ -1,42 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import {
+    useRef,
+    useState
+} from "react";
 
-import Header from "../components/Header/Header";
-import AddCarDialog from "../components/Cars/AddCarDialog";
-
+import {
+    useOutletContext
+} from "react-router-dom";
 
 import {
     collection,
     doc,
-    onSnapshot,
     runTransaction
 } from "firebase/firestore";
 
 import {
-    onAuthStateChanged
-} from "firebase/auth";
-
-import {
-    auth,
     db
 } from "../services/firebase";
+
+import AddCarDialog from "../components/Cars/AddCarDialog";
 import CarsList from "../components/Cars/CarsList";
 import CarCard from "../components/Cars/CarCard";
 
 
 function HomePage() {
 
-    const [user, setUser] = useState(null);
+    const {
+        user,
+        isAdmin,
+        cars,
+        setCars,
+        carsLoading
+    } = useOutletContext();
 
-    const [userData, setUserData] =
-        useState(null);
-
-    const [cars, setCars] = useState([]);
-
-    const [carsLoading, setCarsLoading] =
-        useState(true);
-
-    const [history, setHistory] =
-        useState([]);
 
     const [selectedCar, setSelectedCar] =
         useState(null);
@@ -48,161 +43,14 @@ function HomePage() {
             TotalCount: ""
         });
 
-    const dialogRef = useRef(null);
+    const dialogRef =
+        useRef(null);
 
-    const rentDialogRef = useRef(null);
+    const rentDialogRef =
+        useRef(null);
 
     const [isAddCarOpen, setIsAddCarOpen] =
         useState(false);
-
-
-    useEffect(() => {
-
-        const unsubscribe =
-            onAuthStateChanged(
-                auth,
-                (currentUser) => {
-                    setUser(currentUser);
-                }
-            );
-
-        return unsubscribe;
-
-    }, []);
-
-
-    useEffect(() => {
-
-        if (!user) {
-            setUserData(null);
-            return;
-        }
-
-        const unsubscribe =
-            onSnapshot(
-                collection(db, "users"),
-                (snapshot) => {
-
-                    const users =
-                        snapshot.docs.map(
-                            (doc) => ({
-                                id: doc.id,
-                                ...doc.data()
-                            })
-                        );
-
-                    const currentUser =
-                        users.find(
-                            (item) =>
-                                item.uid ===
-                                user.uid
-                        );
-
-                    setUserData(
-                        currentUser || null
-                    );
-                },
-                (error) => {
-
-                    console.error(
-                        "Error loading users:",
-                        error
-                    );
-
-                }
-            );
-
-        return unsubscribe;
-
-    }, [user]);
-
-
-    useEffect(() => {
-
-        if (!user) {
-
-            setCars([]);
-            setCarsLoading(false);
-
-            return;
-        }
-
-        setCarsLoading(true);
-
-        const unsubscribe =
-            onSnapshot(
-                collection(db, "cars"),
-                (snapshot) => {
-
-                    const carData =
-                        snapshot.docs.map(
-                            (doc) => ({
-                                ...doc.data(),
-                                firebaseId: doc.id
-                            })
-                        );
-
-                    setCars(carData);
-                    setCarsLoading(false);
-                },
-                (error) => {
-
-                    console.error(
-                        "Error loading cars:",
-                        error
-                    );
-
-                    setCarsLoading(false);
-                }
-            );
-
-        return unsubscribe;
-
-    }, [user]);
-
-
-    useEffect(() => {
-
-        if (!user) {
-
-            setHistory([]);
-
-            return;
-        }
-
-        const unsubscribe =
-            onSnapshot(
-                collection(db, "history"),
-                (snapshot) => {
-
-                    const historyData =
-                        snapshot.docs.map(
-                            (doc) => ({
-                                ...doc.data(),
-                                firebaseId: doc.id
-                            })
-                        );
-
-                    setHistory(historyData);
-                },
-                (error) => {
-
-                    console.error(
-                        "Error loading history:",
-                        error
-                    );
-
-                }
-            );
-
-        return unsubscribe;
-
-    }, [user]);
-
-
-    const isAdmin =
-        user?.email?.toLowerCase() ===
-        "admin@gmail.com";
 
 
     function handleCardClick(car) {
@@ -412,7 +260,8 @@ function HomePage() {
             return;
         }
 
-        const today = new Date();
+        const today =
+            new Date();
 
         const FromDate =
             new Date(
@@ -725,208 +574,204 @@ function HomePage() {
 
 
     return (
+        <>
 
-        <div className="Car-Rental">
+            {carsLoading ? (
 
-            <div className="container">
+                <div className="cars-loading">
 
-                <Header
-                    user={user}
-                    userData={userData}
-                    isAdmin={isAdmin}
-                    cars={cars}
-                    setCars={setCars}
-                />
+                    <div className="loader"></div>
 
-                <div className="contents">
+                    <h2>
+                        Loading cars...
+                    </h2>
 
-                    {carsLoading ? (
-
-                        <div className="cars-loading">
-
-                            <div className="loader"></div>
-
-                            <h2>
-                                Loading cars...
-                            </h2>
-
-                            <p>
-                                Please wait while
-                                we load all cars.
-                            </p>
-
-                        </div>
-
-                    ) : cars.length === 0 ? (
-
-                        <div className="cars-loading">
-
-                            <h2>
-                                No cars available
-                            </h2>
-
-                            {isAdmin && (
-                                <p>
-                                    Add a new car
-                                    to get started.
-                                </p>
-                            )}
-
-                        </div>
-
-                    ) : (
-
-                        <CarsList
-                            cars={cars}
-                            onCardClick={handleCardClick}
-                        />
-
-                    )}
-
-
-                    <dialog
-                        ref={dialogRef}
-                        className="car-dialog"
-                    >
-
-                        {selectedCar && (
-
-                            <CarCard
-                                closeDialog={closeDialog}
-                                selectedCar={selectedCar}
-                                handleEditCarOpen={handleEditCarOpen}
-                                handleRemoveClick={handleRemoveClick}
-                                handleRentClick={handleRentClick}
-                                isAdmin={isAdmin}
-                            />
-
-
-                        )}
-
-                    </dialog>
-
-
-                    <dialog
-                        ref={rentDialogRef}
-                        className="rent-dialog"
-                    >
-
-                        <button
-                            type="button"
-                            className="close-dialog"
-                            onClick={
-                                handleRentClose
-                            }
-                        >
-                            ×
-                        </button>
-
-                        <h1>
-                            Rent a Car
-                        </h1>
-
-                        <form
-                            onSubmit={
-                                handleRentSubmit
-                            }
-                        >
-
-                            <div className="form-content">
-
-                                <label htmlFor="FromDate">
-                                    From
-                                </label>
-
-                                <label htmlFor="TotalCount">
-                                    Total price
-                                </label>
-
-                            </div>
-
-                            <div className="form-content">
-
-                                <input
-                                    name="FromDate"
-                                    id="FromDate"
-                                    type="date"
-                                    value={
-                                        formData.FromDate
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                />
-
-                                <input
-                                    name="TotalCount"
-                                    id="TotalCount"
-                                    type="number"
-                                    value={
-                                        calculateTotalPrice()
-                                    }
-                                    readOnly
-                                    tabIndex={-1}
-                                    placeholder="Price..."
-                                />
-
-                            </div>
-
-                            <div className="form-content">
-
-                                <label htmlFor="ToDate">
-                                    To
-                                </label>
-
-                            </div>
-
-                            <div className="form-content">
-
-                                <input
-                                    name="ToDate"
-                                    id="ToDate"
-                                    type="date"
-                                    value={
-                                        formData.ToDate
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                />
-
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="RentButton"
-                            >
-                                Rent
-                            </button>
-
-                        </form>
-
-                    </dialog>
-
-
-                    <AddCarDialog
-                        isOpen={
-                            isAddCarOpen
-                        }
-                        onClose={
-                            handleEditCarClose
-                        }
-                        cars={cars}
-                        setCars={setCars}
-                        isAdd={false}
-                        selectedCar={
-                            selectedCar
-                        }
-                    />
+                    <p>
+                        Please wait while
+                        we load all cars.
+                    </p>
 
                 </div>
 
-            </div>
+            ) : cars.length === 0 ? (
 
-        </div>
+                <div className="cars-loading">
+
+                    <h2>
+                        No cars available
+                    </h2>
+
+                    {isAdmin && (
+                        <p>
+                            Add a new car
+                            to get started.
+                        </p>
+                    )}
+
+                </div>
+
+            ) : (
+
+                <CarsList
+                    cars={cars}
+                    onCardClick={
+                        handleCardClick
+                    }
+                />
+
+            )}
+
+
+            <dialog
+                ref={dialogRef}
+                className="car-dialog"
+            >
+
+                {selectedCar && (
+
+                    <CarCard
+                        closeDialog={
+                            closeDialog
+                        }
+                        selectedCar={
+                            selectedCar
+                        }
+                        handleEditCarOpen={
+                            handleEditCarOpen
+                        }
+                        handleRemoveClick={
+                            handleRemoveClick
+                        }
+                        handleRentClick={
+                            handleRentClick
+                        }
+                        isAdmin={
+                            isAdmin
+                        }
+                    />
+
+                )}
+
+            </dialog>
+
+
+            <dialog
+                ref={rentDialogRef}
+                className="rent-dialog"
+            >
+
+                <button
+                    type="button"
+                    className="close-dialog"
+                    onClick={
+                        handleRentClose
+                    }
+                >
+                    ×
+                </button>
+
+                <h1>
+                    Rent a Car
+                </h1>
+
+                <form
+                    onSubmit={
+                        handleRentSubmit
+                    }
+                >
+
+                    <div className="form-content">
+
+                        <label htmlFor="FromDate">
+                            From
+                        </label>
+
+                        <label htmlFor="TotalCount">
+                            Total price
+                        </label>
+
+                    </div>
+
+                    <div className="form-content">
+
+                        <input
+                            name="FromDate"
+                            id="FromDate"
+                            type="date"
+                            value={
+                                formData.FromDate
+                            }
+                            onChange={
+                                handleChange
+                            }
+                        />
+
+                        <input
+                            name="TotalCount"
+                            id="TotalCount"
+                            type="number"
+                            value={
+                                calculateTotalPrice()
+                            }
+                            readOnly
+                            tabIndex={-1}
+                            placeholder="Price..."
+                        />
+
+                    </div>
+
+                    <div className="form-content">
+
+                        <label htmlFor="ToDate">
+                            To
+                        </label>
+
+                    </div>
+
+                    <div className="form-content">
+
+                        <input
+                            name="ToDate"
+                            id="ToDate"
+                            type="date"
+                            value={
+                                formData.ToDate
+                            }
+                            onChange={
+                                handleChange
+                            }
+                        />
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="RentButton"
+                    >
+                        Rent
+                    </button>
+
+                </form>
+
+            </dialog>
+
+
+            <AddCarDialog
+                isOpen={
+                    isAddCarOpen
+                }
+                onClose={
+                    handleEditCarClose
+                }
+                cars={cars}
+                setCars={setCars}
+                isAdd={false}
+                selectedCar={
+                    selectedCar
+                }
+            />
+
+        </>
     );
 }
 
