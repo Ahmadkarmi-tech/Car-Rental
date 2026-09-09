@@ -1,55 +1,271 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import Header from "../components/Header/Header";
 import AddCarDialog from "../components/Cars/AddCarDialog";
 
-import {collection,doc,runTransaction} from "firebase/firestore";
 
-import { db } from "../services/firebase";
+import {
+    collection,
+    doc,
+    onSnapshot,
+    runTransaction
+} from "firebase/firestore";
 
-function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
-    const [selectedCar, setSelectedCar] = useState(null);
+import {
+    onAuthStateChanged
+} from "firebase/auth";
 
-    const [formData, setFormData] = useState({
-        FromDate: "",
-        ToDate: "",
-        TotalCount: ""
-    });
+import {
+    auth,
+    db
+} from "../services/firebase";
+import CarsList from "../components/Cars/CarsList";
+import CarCard from "../components/Cars/CarCard";
+
+
+function HomePage() {
+
+    const [user, setUser] = useState(null);
+
+    const [userData, setUserData] =
+        useState(null);
+
+    const [cars, setCars] = useState([]);
+
+    const [carsLoading, setCarsLoading] =
+        useState(true);
+
+    const [history, setHistory] =
+        useState([]);
+
+    const [selectedCar, setSelectedCar] =
+        useState(null);
+
+    const [formData, setFormData] =
+        useState({
+            FromDate: "",
+            ToDate: "",
+            TotalCount: ""
+        });
 
     const dialogRef = useRef(null);
+
     const rentDialogRef = useRef(null);
 
     const [isAddCarOpen, setIsAddCarOpen] =
         useState(false);
 
+
+    useEffect(() => {
+
+        const unsubscribe =
+            onAuthStateChanged(
+                auth,
+                (currentUser) => {
+                    setUser(currentUser);
+                }
+            );
+
+        return unsubscribe;
+
+    }, []);
+
+
+    useEffect(() => {
+
+        if (!user) {
+            setUserData(null);
+            return;
+        }
+
+        const unsubscribe =
+            onSnapshot(
+                collection(db, "users"),
+                (snapshot) => {
+
+                    const users =
+                        snapshot.docs.map(
+                            (doc) => ({
+                                id: doc.id,
+                                ...doc.data()
+                            })
+                        );
+
+                    const currentUser =
+                        users.find(
+                            (item) =>
+                                item.uid ===
+                                user.uid
+                        );
+
+                    setUserData(
+                        currentUser || null
+                    );
+                },
+                (error) => {
+
+                    console.error(
+                        "Error loading users:",
+                        error
+                    );
+
+                }
+            );
+
+        return unsubscribe;
+
+    }, [user]);
+
+
+    useEffect(() => {
+
+        if (!user) {
+
+            setCars([]);
+            setCarsLoading(false);
+
+            return;
+        }
+
+        setCarsLoading(true);
+
+        const unsubscribe =
+            onSnapshot(
+                collection(db, "cars"),
+                (snapshot) => {
+
+                    const carData =
+                        snapshot.docs.map(
+                            (doc) => ({
+                                ...doc.data(),
+                                firebaseId: doc.id
+                            })
+                        );
+
+                    setCars(carData);
+                    setCarsLoading(false);
+                },
+                (error) => {
+
+                    console.error(
+                        "Error loading cars:",
+                        error
+                    );
+
+                    setCarsLoading(false);
+                }
+            );
+
+        return unsubscribe;
+
+    }, [user]);
+
+
+    useEffect(() => {
+
+        if (!user) {
+
+            setHistory([]);
+
+            return;
+        }
+
+        const unsubscribe =
+            onSnapshot(
+                collection(db, "history"),
+                (snapshot) => {
+
+                    const historyData =
+                        snapshot.docs.map(
+                            (doc) => ({
+                                ...doc.data(),
+                                firebaseId: doc.id
+                            })
+                        );
+
+                    setHistory(historyData);
+                },
+                (error) => {
+
+                    console.error(
+                        "Error loading history:",
+                        error
+                    );
+
+                }
+            );
+
+        return unsubscribe;
+
+    }, [user]);
+
+
+    const isAdmin =
+        user?.email?.toLowerCase() ===
+        "admin@gmail.com";
+
+
     function handleCardClick(car) {
+
         setSelectedCar(car);
 
-        if (dialogRef.current && !dialogRef.current.open) {
+        if (
+            dialogRef.current &&
+            !dialogRef.current.open
+        ) {
+
             dialogRef.current.showModal();
+
         }
     }
 
+
     function closeDialog() {
-        if (dialogRef.current && dialogRef.current.open) {
+
+        if (
+            dialogRef.current &&
+            dialogRef.current.open
+        ) {
+
             dialogRef.current.close();
+
         }
 
         setSelectedCar(null);
     }
 
+
     function handleRentClick() {
-        if (dialogRef.current && dialogRef.current.open) {
+
+        if (
+            dialogRef.current &&
+            dialogRef.current.open
+        ) {
+
             dialogRef.current.close();
+
         }
 
-        if (rentDialogRef.current && !rentDialogRef.current.open) {
+        if (
+            rentDialogRef.current &&
+            !rentDialogRef.current.open
+        ) {
+
             rentDialogRef.current.showModal();
+
         }
     }
 
+
     function handleRentClose() {
-        if (rentDialogRef.current && rentDialogRef.current.open) {
+
+        if (
+            rentDialogRef.current &&
+            rentDialogRef.current.open
+        ) {
+
             rentDialogRef.current.close();
+
         }
 
         setFormData({
@@ -59,47 +275,94 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
         });
     }
 
-    function handleChange(e) {
-        const {name,value} = e.target;
 
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+    function handleChange(e) {
+
+        const {
+            name,
+            value
+        } = e.target;
+
+        setFormData(
+            (prev) => ({
+                ...prev,
+                [name]: value
+            })
+        );
     }
 
+
     function calculateTotalPrice() {
-        if (!formData.FromDate || !formData.ToDate ||!selectedCar) {
+
+        if (
+            !formData.FromDate ||
+            !formData.ToDate ||
+            !selectedCar
+        ) {
+
             return "";
         }
 
-        const fromDate = new Date(formData.FromDate);
+        const fromDate =
+            new Date(
+                formData.FromDate
+            );
 
-        const toDate = new Date(formData.ToDate);
+        const toDate =
+            new Date(
+                formData.ToDate
+            );
 
-        fromDate.setHours(0, 0, 0, 0);
-        toDate.setHours(0, 0, 0, 0);
+        fromDate.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+        toDate.setHours(
+            0,
+            0,
+            0,
+            0
+        );
 
         if (toDate < fromDate) {
             return "";
         }
 
-        const days = Math.max(1,Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)));
+        const days =
+            Math.max(
+                1,
+                Math.ceil(
+                    (toDate - fromDate) /
+                    (1000 * 60 * 60 * 24)
+                )
+            );
 
-        return (days * Number(selectedCar.pricePerDay));
+        return (
+            days *
+            Number(
+                selectedCar.pricePerDay
+            )
+        );
     }
 
+
     async function getNextHistoryId() {
-        const counterRef = doc(
-            db,
-            "counters",
-            "history"
-        );
+
+        const counterRef =
+            doc(
+                db,
+                "counters",
+                "history"
+            );
 
         const nextId =
             await runTransaction(
                 db,
                 async (transaction) => {
+
                     const counterSnapshot =
                         await transaction.get(
                             counterRef
@@ -117,7 +380,8 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     transaction.set(
                         counterRef,
                         {
-                            nextId: currentId + 1
+                            nextId:
+                                currentId + 1
                         },
                         {
                             merge: true
@@ -131,31 +395,71 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
         return nextId;
     }
 
+
     async function handleRentSubmit(e) {
+
         e.preventDefault();
 
-        if (!formData.FromDate || !formData.ToDate) {
-            alert("You should fill all the fields!");
+        if (
+            !formData.FromDate ||
+            !formData.ToDate
+        ) {
+
+            alert(
+                "You should fill all the fields!"
+            );
+
             return;
         }
 
         const today = new Date();
 
-        const FromDate = new Date(formData.FromDate);
+        const FromDate =
+            new Date(
+                formData.FromDate
+            );
 
-        const ToDate = new Date(formData.ToDate);
+        const ToDate =
+            new Date(
+                formData.ToDate
+            );
 
-        today.setHours(0, 0, 0, 0);
-        FromDate.setHours(0, 0, 0, 0);
-        ToDate.setHours(0, 0, 0, 0);
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+        FromDate.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+        ToDate.setHours(
+            0,
+            0,
+            0,
+            0
+        );
 
         if (FromDate < today) {
-            alert("The starting date cannot be in the past!");
+
+            alert(
+                "The starting date cannot be in the past!"
+            );
+
             return;
         }
 
         if (ToDate < FromDate) {
-            alert("The return date cannot be before the starting date!");
+
+            alert(
+                "The return date cannot be before the starting date!"
+            );
+
             return;
         }
 
@@ -164,58 +468,79 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
         }
 
         if (!user) {
-            alert("You must be logged in to rent a car.");
+
+            alert(
+                "You must be logged in to rent a car."
+            );
+
             return;
         }
 
         if (!selectedCar.available) {
-            alert("This car is currently rented.");
+
+            alert(
+                "This car is currently rented."
+            );
+
             return;
         }
 
         try {
+
             const historyId =
                 await getNextHistoryId();
 
             const totalPrice =
                 calculateTotalPrice();
 
-            const historyRef = doc(
-                collection(
-                    db,
-                    "history"
-                )
-            );
+            const historyRef =
+                doc(
+                    collection(
+                        db,
+                        "history"
+                    )
+                );
 
             const carDocumentId =
                 selectedCar.firebaseId;
 
             if (!carDocumentId) {
+
                 throw new Error(
                     "Car document ID is missing."
                 );
             }
 
-            const carRef = doc(
-                db,
-                "cars",
-                carDocumentId
-            );
+            const carRef =
+                doc(
+                    db,
+                    "cars",
+                    carDocumentId
+                );
 
             const newHistory = {
+
                 id: historyId,
-                carID: Number(
-                    selectedCar.id
-                ),
+
+                carID:
+                    Number(
+                        selectedCar.id
+                    ),
+
                 FromDate:
                     formData.FromDate,
+
                 ToDate:
                     formData.ToDate,
-                Total: Number(
-                    totalPrice
-                ),
+
+                Total:
+                    Number(
+                        totalPrice
+                    ),
+
                 Email:
                     user.email,
+
                 uid:
                     user.uid
             };
@@ -223,6 +548,7 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
             await runTransaction(
                 db,
                 async (transaction) => {
+
                     const carSnapshot =
                         await transaction.get(
                             carRef
@@ -231,6 +557,7 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     if (
                         !carSnapshot.exists()
                     ) {
+
                         throw new Error(
                             "Car no longer exists."
                         );
@@ -239,7 +566,11 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     const currentCar =
                         carSnapshot.data();
 
-                    if (currentCar.available === false) {
+                    if (
+                        currentCar.available ===
+                        false
+                    ) {
+
                         throw new Error(
                             "This car has already been rented."
                         );
@@ -253,8 +584,7 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     transaction.update(
                         carRef,
                         {
-                            available:
-                                false
+                            available: false
                         }
                     );
                 }
@@ -265,32 +595,39 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     prevCars.map(
                         (car) =>
                             car.firebaseId ===
-                            carDocumentId
+                                carDocumentId
                                 ? {
                                     ...car,
-                                    available:
-                                        false
+                                    available: false
                                 }
                                 : car
                     )
             );
 
-            alert("Car rented successfully!");
+            alert(
+                "Car rented successfully!"
+            );
 
             handleRentClose();
+
             setSelectedCar(null);
 
         } catch (error) {
+
             console.error(
                 "Rental error:",
                 error
             );
 
-            alert(`Failed to rent the car: ${error.message}`);
+            alert(
+                `Failed to rent the car: ${error.message}`
+            );
         }
     }
 
+
     async function handleRemoveClick() {
+
         if (!selectedCar) {
             return;
         }
@@ -308,20 +645,27 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
             selectedCar.firebaseId;
 
         if (!carDocumentId) {
-            alert("Car document ID is missing.");
+
+            alert(
+                "Car document ID is missing."
+            );
+
             return;
         }
 
         try {
-            const carRef = doc(
-                db,
-                "cars",
-                carDocumentId
-            );
+
+            const carRef =
+                doc(
+                    db,
+                    "cars",
+                    carDocumentId
+                );
 
             await runTransaction(
                 db,
                 async (transaction) => {
+
                     transaction.delete(
                         carRef
                     );
@@ -339,35 +683,49 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
 
             closeDialog();
 
-            alert("Car removed successfully!");
+            alert(
+                "Car removed successfully!"
+            );
 
         } catch (error) {
+
             console.error(
                 "Error removing car:",
                 error
             );
 
-            alert(`Failed to remove car: ${error.message}`);
+            alert(
+                `Failed to remove car: ${error.message}`
+            );
         }
     }
 
+
     function handleEditCarOpen() {
+
         if (
             dialogRef.current &&
             dialogRef.current.open
         ) {
+
             dialogRef.current.close();
+
         }
 
         setIsAddCarOpen(true);
     }
 
+
     function handleEditCarClose() {
+
         setIsAddCarOpen(false);
+
         setSelectedCar(null);
     }
 
+
     return (
+
         <div className="Car-Rental">
 
             <div className="container">
@@ -385,6 +743,7 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     {carsLoading ? (
 
                         <div className="cars-loading">
+
                             <div className="loader"></div>
 
                             <h2>
@@ -395,11 +754,13 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                                 Please wait while
                                 we load all cars.
                             </p>
+
                         </div>
 
                     ) : cars.length === 0 ? (
 
                         <div className="cars-loading">
+
                             <h2>
                                 No cars available
                             </h2>
@@ -410,94 +771,18 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                                     to get started.
                                 </p>
                             )}
+
                         </div>
 
                     ) : (
 
-                        <ul className="grid">
+                        <CarsList
+                            cars={cars}
+                            onCardClick={handleCardClick}
+                        />
 
-                            {cars.map((car) => {
-
-                                const status =
-                                    car.available
-                                        ? "available"
-                                        : "rented";
-
-                                return (
-                                    <li
-                                        key={
-                                            car.firebaseId
-                                        }
-                                        className={
-                                            `card ${status}`
-                                        }
-                                        onClick={() =>
-                                            handleCardClick(
-                                                car
-                                            )
-                                        }
-                                    >
-
-                                        <img
-                                            src={
-                                                car.image
-                                            }
-                                            alt={
-                                                `${car.brand} ${car.model}`
-                                            }
-                                        />
-
-                                        <h3>
-                                            {
-                                                car.brand
-                                            }{" "}
-                                            {
-                                                car.model
-                                            }
-                                        </h3>
-
-                                        <p>
-                                            {
-                                                car.year
-                                            }{" "}
-                                            •{" "}
-                                            {
-                                                car.type
-                                            }
-                                        </p>
-
-                                        <p>
-                                            {
-                                                car.transmission
-                                            }{" "}
-                                            •{" "}
-                                            {
-                                                car.fuel
-                                            }
-                                        </p>
-
-                                        <p>
-                                            $
-                                            {
-                                                car.pricePerDay
-                                            }{" "}
-                                            / day
-                                        </p>
-
-                                        <span className="status">
-                                            {
-                                                car.available
-                                                    ? "Available"
-                                                    : "Rented"
-                                            }
-                                        </span>
-
-                                    </li>
-                                );
-                            })}
-
-                        </ul>
                     )}
+
 
                     <dialog
                         ref={dialogRef}
@@ -505,160 +790,21 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
                     >
 
                         {selectedCar && (
-                            <>
 
-                                <button
-                                    type="button"
-                                    className="close-dialog"
-                                    onClick={
-                                        closeDialog
-                                    }
-                                >
-                                    ×
-                                </button>
+                            <CarCard
+                                closeDialog={closeDialog}
+                                selectedCar={selectedCar}
+                                handleEditCarOpen={handleEditCarOpen}
+                                handleRemoveClick={handleRemoveClick}
+                                handleRentClick={handleRentClick}
+                                isAdmin={isAdmin}
+                            />
 
-                                <img
-                                    src={
-                                        selectedCar.image
-                                    }
-                                    alt={
-                                        `${selectedCar.brand} ${selectedCar.model}`
-                                    }
-                                />
 
-                                <h2>
-                                    {
-                                        selectedCar.brand
-                                    }{" "}
-                                    {
-                                        selectedCar.model
-                                    }
-                                </h2>
-
-                                <p>
-                                    {
-                                        selectedCar.year
-                                    }{" "}
-                                    •{" "}
-                                    {
-                                        selectedCar.type
-                                    }
-                                </p>
-
-                                <div className="car-details">
-
-                                    <p>
-                                        <strong>
-                                            Transmission:
-                                        </strong>{" "}
-                                        {
-                                            selectedCar.transmission
-                                        }
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Fuel:
-                                        </strong>{" "}
-                                        {
-                                            selectedCar.fuel
-                                        }
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Seats:
-                                        </strong>{" "}
-                                        {
-                                            selectedCar.seats
-                                        }
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Doors:
-                                        </strong>{" "}
-                                        {
-                                            selectedCar.doors
-                                        }
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Mileage:
-                                        </strong>{" "}
-                                        {
-                                            Number(
-                                                selectedCar.mileage
-                                            ).toLocaleString()
-                                        }{" "}
-                                        km
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Location:
-                                        </strong>{" "}
-                                        {
-                                            selectedCar.location
-                                        }
-                                    </p>
-
-                                </div>
-
-                                <h3>
-                                    $
-                                    {
-                                        selectedCar.pricePerDay
-                                    }{" "}
-                                    / day
-                                </h3>
-
-                                <button
-                                    type="button"
-                                    className="rent-button"
-                                    disabled={
-                                        !selectedCar.available
-                                    }
-                                    onClick={
-                                        handleRentClick
-                                    }
-                                >
-                                    {
-                                        selectedCar.available
-                                            ? "Rent This Car"
-                                            : "Currently Rented"
-                                    }
-                                </button>
-
-                                {isAdmin && (
-                                    <>
-                                        <button
-                                            type="button"
-                                            className="edit-button"
-                                            onClick={
-                                                handleEditCarOpen
-                                            }
-                                        >
-                                            Edit This Car
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            className="remove-button"
-                                            onClick={
-                                                handleRemoveClick
-                                            }
-                                        >
-                                            Remove This Car
-                                        </button>
-                                    </>
-                                )}
-
-                            </>
                         )}
 
                     </dialog>
+
 
                     <dialog
                         ref={rentDialogRef}
@@ -760,6 +906,7 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
 
                     </dialog>
 
+
                     <AddCarDialog
                         isOpen={
                             isAddCarOpen
@@ -782,5 +929,6 @@ function HomePage({user,userData,isAdmin,history,cars,setCars, carsLoading}) {
         </div>
     );
 }
+
 
 export default HomePage;

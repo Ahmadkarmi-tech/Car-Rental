@@ -1,35 +1,251 @@
+import { useEffect, useState } from "react";
+
 import Header from "../components/Header/Header";
 
-function History({
-    user,
-    userData,
-    isAdmin,
-    history,
-    cars,
-    setCars
-}) {
-    const selectedHistory =
+import {
+    collection,
+    onSnapshot
+} from "firebase/firestore";
+
+import {
+    onAuthStateChanged
+} from "firebase/auth";
+
+import {
+    auth,
+    db
+} from "../services/firebase";
+
+
+function History() {
+
+    const [user, setUser] = useState(null);
+
+    const [userData, setUserData] =
+        useState(null);
+
+    const [cars, setCars] = useState([]);
+
+    const [history, setHistory] =
+        useState([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+
+    useEffect(() => {
+
+        const unsubscribe =
+            onAuthStateChanged(
+                auth,
+                (currentUser) => {
+                    setUser(currentUser);
+                    setLoading(false);
+                }
+            );
+
+        return unsubscribe;
+
+    }, []);
+
+
+    useEffect(() => {
+
+        if (!user) {
+            setUserData(null);
+            return;
+        }
+
+        const unsubscribe =
+            onSnapshot(
+                collection(db, "users"),
+                (snapshot) => {
+
+                    const users =
+                        snapshot.docs.map(
+                            (doc) => ({
+                                id: doc.id,
+                                ...doc.data()
+                            })
+                        );
+
+                    const currentUser =
+                        users.find(
+                            (item) =>
+                                item.uid ===
+                                user.uid
+                        );
+
+                    setUserData(
+                        currentUser || null
+                    );
+                },
+                (error) => {
+
+                    console.error(
+                        "Error loading users:",
+                        error
+                    );
+
+                }
+            );
+
+        return unsubscribe;
+
+    }, [user]);
+
+
+    useEffect(() => {
+
+        if (!user) {
+            setCars([]);
+            return;
+        }
+
+        const unsubscribe =
+            onSnapshot(
+                collection(db, "cars"),
+                (snapshot) => {
+
+                    const carData =
+                        snapshot.docs.map(
+                            (doc) => ({
+                                ...doc.data(),
+                                firebaseId: doc.id
+                            })
+                        );
+
+                    setCars(carData);
+                },
+                (error) => {
+
+                    console.error(
+                        "Error loading cars:",
+                        error
+                    );
+
+                }
+            );
+
+        return unsubscribe;
+
+    }, [user]);
+
+
+    useEffect(() => {
+
+        if (!user) {
+            setHistory([]);
+            return;
+        }
+
+        const unsubscribe =
+            onSnapshot(
+                collection(db, "history"),
+                (snapshot) => {
+
+                    const historyData =
+                        snapshot.docs
+                            .map(
+                                (doc) => ({
+                                    ...doc.data(),
+                                    firebaseId: doc.id
+                                })
+                            )
+                            .sort(
+                                (a, b) =>
+                                    Number(a.id) -
+                                    Number(b.id)
+                            );
+
+                    setHistory(historyData);
+                },
+                (error) => {
+
+                    console.error(
+                        "Error loading history:",
+                        error
+                    );
+
+                }
+            );
+
+        return unsubscribe;
+
+    }, [user]);
+
+
+    const isAdmin =
+        user?.email?.toLowerCase() ===
+        "admin@gmail.com";
+
+
+    const userHistory =
         isAdmin
             ? history
             : history.filter(
-                (hist) =>
-                    hist.uid === user?.uid ||
-                    hist.Email === user?.email
+                (item) =>
+                    item.uid === user?.uid
             );
 
-    function getCarName(carID) {
-        const car = cars.find(
-            (item) =>
-                Number(item.id) ===
-                Number(carID)
-        );
+
+    function getCar(carID) {
+
+        const car =
+            cars.find(
+                (item) =>
+                    Number(item.id) ===
+                    Number(carID)
+            );
 
         if (!car) {
-            return `Car ${carID}`;
+            return `Car #${carID}`;
         }
 
         return `${car.brand} ${car.model}`;
     }
+
+
+    if (loading) {
+
+        return (
+            <div className="Car-Rental">
+
+                <div className="container">
+
+                    <Header
+                        user={user}
+                        userData={userData}
+                        isAdmin={isAdmin}
+                        cars={cars}
+                        setCars={setCars}
+                    />
+
+                    <div className="contents">
+
+                        <div className="cars-loading">
+
+                            <div className="loader"></div>
+
+                            <h2>
+                                Loading history...
+                            </h2>
+
+                            <p>
+                                Please wait while
+                                we load your history.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        );
+    }
+
 
     return (
         <div className="Car-Rental">
@@ -49,7 +265,7 @@ function History({
                     <table className="history-table">
 
                         <caption>
-                            Rent History
+                            Rental History
                         </caption>
 
                         <thead>
@@ -76,50 +292,71 @@ function History({
                                     Total
                                 </th>
 
+                                {isAdmin && (
+                                    <th>
+                                        Email
+                                    </th>
+                                )}
+
                             </tr>
 
                         </thead>
 
                         <tbody>
 
-                            {selectedHistory.length >
-                            0 ? (
+                            {userHistory.length === 0 ? (
 
-                                selectedHistory.map(
-                                    (hist) => (
+                                <tr>
+
+                                    <td
+                                        colSpan={
+                                            isAdmin
+                                                ? 6
+                                                : 5
+                                        }
+                                        style={{
+                                            textAlign:
+                                                "center"
+                                        }}
+                                    >
+                                        No rental
+                                        history found.
+                                    </td>
+
+                                </tr>
+
+                            ) : (
+
+                                userHistory.map(
+                                    (item) => (
+
                                         <tr
                                             key={
-                                                hist.firebaseId ||
-                                                hist.id
+                                                item.firebaseId
                                             }
                                         >
 
                                             <td>
-                                                {
-                                                    hist.id
-                                                }
-                                            </td>
-
-                                            <td>
-                                                {getCarName(
-                                                    hist.carID
-                                                )}{" "}
-                                                (
-                                                {
-                                                    hist.carID
-                                                }
-                                                )
+                                                {item.id}
                                             </td>
 
                                             <td>
                                                 {
-                                                    hist.FromDate
+                                                    getCar(
+                                                        item.carID
+                                                    )
                                                 }
                                             </td>
 
                                             <td>
                                                 {
-                                                    hist.ToDate
+                                                    item.FromDate
+                                                }
+                                            </td>
+
+                                            <td>
+                                                {
+                                                    item.ToDate
                                                 }
                                             </td>
 
@@ -127,30 +364,23 @@ function History({
                                                 $
                                                 {
                                                     Number(
-                                                        hist.Total
-                                                    ).toFixed(
-                                                        2
-                                                    )
+                                                        item.Total
+                                                    ).toFixed(2)
                                                 }
                                             </td>
 
+                                            {isAdmin && (
+                                                <td>
+                                                    {
+                                                        item.Email
+                                                    }
+                                                </td>
+                                            )}
+
                                         </tr>
+
                                     )
                                 )
-
-                            ) : (
-
-                                <tr>
-
-                                    <td
-                                        colSpan="5"
-                                    >
-                                        No rental
-                                        history
-                                        found.
-                                    </td>
-
-                                </tr>
 
                             )}
 
@@ -165,5 +395,6 @@ function History({
         </div>
     );
 }
+
 
 export default History;
