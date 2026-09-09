@@ -26,8 +26,7 @@ function AppRoute() {
 
     const [user, setUser] = useState(null);
 
-    const [authLoading, setAuthLoading] =
-        useState(true);
+    const [authLoading, setAuthLoading] = useState(true);
 
 
     useEffect(() => {
