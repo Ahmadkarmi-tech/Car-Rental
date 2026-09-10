@@ -21,7 +21,7 @@ function CarCard({ closeDialog, selectedCar, handleEditCarOpen, handleRemoveClic
                 }
             />
 
-            <h2>
+            <h2 data-testid="selected-car-name">
                 {
                     selectedCar.brand
                 }{" "}

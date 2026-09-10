@@ -567,6 +567,7 @@ function AddCarDialog({
                     <button
                         type="submit"
                         className="add-car-submit"
+                        id="AddNewCarToList"
                         disabled={loading}
                     >
                         {loading
